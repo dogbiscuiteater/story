@@ -1,18 +1,24 @@
 package gistviewer
 
 import (
+	"fmt"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
+	"strconv"
 )
 
 type list struct {
-	view  *views.CellView
 	model *listModel
+	views.CellView
+}
+
+func (m *list) HandleEvent(ev tcell.Event) bool {
+	fmt.Sprintf("toilet")
+	return m.CellView.HandleEvent(ev)
 }
 
 type listModel struct {
 	history []string
-	views.CellModel
 
 	x    int
 	y    int
@@ -21,10 +27,11 @@ type listModel struct {
 }
 
 func (m *listModel) GetBounds() (int, int) {
-	return 180, 10
+	return m.endx, m.endy
 }
 
 func (m *listModel) MoveCursor(offx, offy int) {
+	fmt.Sprintln("moving " + strconv.Itoa(offy))
 	if m.y+offy > len(m.history) {
 		m.y = len(m.history) - 1
 	} else {
@@ -43,7 +50,7 @@ func (m *listModel) limitCursor() {
 }
 
 func (m *listModel) GetCursor() (int, int, bool, bool) {
-	return m.x, m.y, true, true
+	return m.x, m.y, true, false
 }
 
 func (m *listModel) SetCursor(x int, y int) {

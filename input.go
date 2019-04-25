@@ -3,7 +3,7 @@ package gistviewer
 import "github.com/gdamore/tcell/views"
 
 type input struct {
-	view  *views.TextArea
+	views.TextArea
 	model *inputModel
 }
 

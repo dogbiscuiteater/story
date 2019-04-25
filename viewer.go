@@ -11,9 +11,11 @@ import (
 var app *views.Application
 
 type viewer struct {
-	views.BoxLayout
-	input *input
+	input *views.TextArea
 	list  *list
+	model *listModel
+
+	views.Panel
 }
 
 type viewerModel struct {
@@ -27,7 +29,7 @@ func (m *viewer) HandleEvent(ev tcell.Event) bool {
 			return true
 		}
 	}
-	return m.BoxLayout.HandleEvent(ev)
+	return m.Panel.HandleEvent(ev)
 }
 
 func hst() []string {
@@ -39,26 +41,23 @@ func hst() []string {
 }
 
 func NewViewer() *viewer {
-
 	v := &viewer{}
 
-	i := &input{}
-	i.view = views.NewTextArea()
-	i.model = &inputModel{}
-	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
+	i := views.NewTextArea()
+	i.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
+	m := &listModel{history:hst(), endx:60, endy:20}
 	l := &list{}
-	l.view = views.NewCellView()
-	l.view.SetModel(&listModel{
-		history: hst(),
-	})
-	l.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorOrange))
+	l.Init()
+	l.SetModel(m)
+	l.SetStyle(tcell.StyleDefault.Background(tcell.ColorOrange))
 
 	v.input = i
 	v.list = l
 	v.SetOrientation(views.Vertical)
-	v.AddWidget(i.view, 0.01)
-	v.AddWidget(l.view, 0.5)
+	v.AddWidget(i, 0.01)
+	v.AddWidget(l, 0.5)
+	v.model = m
 
 	app = &views.Application{}
 	app.SetRootWidget(v)
@@ -67,6 +66,5 @@ func NewViewer() *viewer {
 		fmt.Fprintln(os.Stderr, e.Error())
 		os.Exit(1)
 	}
-
 	return v
 }
