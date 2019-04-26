@@ -9,12 +9,13 @@ import (
 
 type list struct {
 	model *listModel
-	views.CellView
+	main *views.CellView
+
+	views.Panel
 }
 
 func (m *list) HandleEvent(ev tcell.Event) bool {
-	fmt.Sprintf("toilet")
-	return m.CellView.HandleEvent(ev)
+	return m.main.HandleEvent(ev)
 }
 
 type listModel struct {
@@ -34,18 +35,10 @@ func (m *listModel) MoveCursor(offx, offy int) {
 	fmt.Sprintln("moving " + strconv.Itoa(offy))
 	if m.y+offy > len(m.history) {
 		m.y = len(m.history) - 1
+	} else if m.y+offy < 0{
+		m.y = 0
 	} else {
 		m.y += offy
-	}
-}
-
-func (m *listModel) limitCursor() {
-	if m.x < 0 {
-		m.x = 0
-	}
-
-	if m.y < 0 {
-		m.y = 0
 	}
 }
 
@@ -77,7 +70,7 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		style = style.Foreground(tcell.ColorRed)
 	}
 
-	if x >= len(m.history[y]) || y >= 9 {
+	if x >= len(m.history[y]) {
 		ch = ' '
 	} else {
 		ch = rune(m.history[y][x])

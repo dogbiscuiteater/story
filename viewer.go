@@ -18,23 +18,32 @@ type viewer struct {
 	views.Panel
 }
 
-type viewerModel struct {
-}
-
-func (m *viewer) HandleEvent(ev tcell.Event) bool {
-	switch ev := ev.(type) {
+func (m *viewer) HandleEvent(e tcell.Event) bool {
+	switch ev := e.(type) {
 	case *tcell.EventKey:
 		if ev.Key() == tcell.KeyEscape {
 			app.Quit()
 			return true
 		}
+
+		if ev.Key() == tcell.KeyDown {
+			m.list.HandleEvent(e)
+			app.Update()
+			return true
+		}
+
+		if ev.Key() == tcell.KeyUp {
+		m.list.HandleEvent(e)
+			app.Update()
+			return true
+		}
 	}
-	return m.Panel.HandleEvent(ev)
+	return m.Panel.HandleEvent(e)
 }
 
 func hst() []string {
-	h := make([]string, 10)
-	for i := 0; i < 10; i++ {
+	h := make([]string, 100)
+	for i := 0; i < 100; i++ {
 		h[i] = "history item " + strconv.Itoa(i)
 	}
 	return h
@@ -46,11 +55,12 @@ func NewViewer() *viewer {
 	i := views.NewTextArea()
 	i.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
-	m := &listModel{history:hst(), endx:60, endy:20}
-	l := &list{}
-	l.Init()
-	l.SetModel(m)
-	l.SetStyle(tcell.StyleDefault.Background(tcell.ColorOrange))
+	m := &listModel{history:hst(), endx:60, endy:120}
+	l := &list{
+		main: views.NewCellView(),
+	}
+	l.SetContent(l.main)
+	l.main.SetModel(m)
 
 	v.input = i
 	v.list = l
