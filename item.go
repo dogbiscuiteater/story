@@ -10,12 +10,12 @@ type Item struct {
 	timestamp time.Time
 	fmt 	  *HistoryFormat
 	entry     string
-	formatted  string
+	formatted string
 	runes     []rune
 	cmdexpr   string
 	cmd       string
 	cmdArgs	  string
-	words		[]string
+	words	  []string
 }
 
 

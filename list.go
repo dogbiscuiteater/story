@@ -5,6 +5,7 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"strconv"
+	"time"
 )
 
 type list struct {
@@ -25,6 +26,20 @@ type listModel struct {
 	y    int
 	endx int
 	endy int
+}
+
+func (m *listModel) loadHistory() *listModel{
+	done := make(chan bool, 1)
+	go func(chan bool) {
+		h := NewHistory()
+		done <-true
+		time.Sleep(2 * time.Second)
+		m.history = h.lines
+		app.Update()
+	}(done)
+
+	<- done
+	return m
 }
 
 func (m *listModel) GetBounds() (int, int) {

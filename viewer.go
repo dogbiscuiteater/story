@@ -14,7 +14,6 @@ type viewer struct {
 	input *input
 	list  *list
 	model *listModel
-
 	views.Panel
 }
 
@@ -55,6 +54,7 @@ func hst() []string {
 }
 
 func NewViewer() *viewer {
+
 	v := &viewer{}
 
 	inputModel := &inputModel{line:""}
@@ -70,6 +70,8 @@ func NewViewer() *viewer {
 	l := &list{
 		view: views.NewCellView(),
 	}
+	listModel.loadHistory()
+
 	l.SetContent(l.view)
 	l.view.SetModel(listModel)
 

@@ -7,25 +7,6 @@ import (
 	"strings"
 )
 
-var commonCommandText = map[string]commonCommand{
-	"vim":   VIM,
-	"nvim":  NVIM,
-	"cd":    CD,
-	"ls":    LS,
-	"mkdir": MKDIR,
-}
-
-
-type commonCommand int
-
-const (
-	VIM commonCommand = iota
-	NVIM
-	CD
-	LS
-	MKDIR
-)
-
 type ordering int
 
 const (
@@ -34,19 +15,12 @@ const (
 	FrequecyDesc
 )
 
-// Create a cheaty cache
-var none = newFilterSettings(DateAsc, false)
-var nvim = newFilterSettings(DateAsc, true)
-var vimAndNvim = newFilterSettings(DateAsc, true, true)
-var cdLsMkdir = newFilterSettings(DateAsc, false, false, true, true, true)
-
 type History struct {
 	allItems [] 	*Item
 	wordsToItems 	map[string][]*Item
 	allVisibleItems [] *Item
 	allItemsRunes   [][] rune
 	lines           [] string
-	filters         map[commonCommand]bool
 	ordering        ordering
 	fmt             *HistoryFormat
 
@@ -68,12 +42,6 @@ type HistoryFormat struct {
 type filterSettings struct {
 	filters  [5]bool
 	ordering ordering
-}
-
-func (h *History) Filters (filters...commonCommand){
-	for _, f := range filters{
-		h.filters[f] = true
-	}
 }
 
 func (h *History) Ordering() ordering {
@@ -110,14 +78,15 @@ func NewHistory() *History {
 		ordering: DateAsc,
 		fmt:      newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "", ""),
 		lines :   strings.Split(string(historyFileContents), "\n"),
-		filters : make(map[commonCommand]bool),
-		filteredItemCache: filteredItemCache{
-			filteredItems: make(map[filterSettings][]*Item, 0),
-			filteredItemRunes:	 make(map[filterSettings][][]rune, 0),
-		},
 	}
 
 	h.create()
+	return h
+}
+
+func loadHistory(done chan bool) *History{
+	h := NewHistory()
+	done <-true
 	return h
 }
 
@@ -131,36 +100,6 @@ func NewHistory() *History {
 		h.allItemsRunes = append(h.allItemsRunes, i.runes)
 	}
 	h.allVisibleItems = h.allItems
-	h.filter(none)
-	h.filter(nvim)
-	h.filter(vimAndNvim)
-	h.filter(cdLsMkdir)
-}
-
-func newFilterSettings (o ordering, commandSwitches ... bool) filterSettings{
-	var c [5]bool
-	for i := 0; i<len(commandSwitches) && i<5; i++ {
-
-		if commandSwitches[i] {
-			c[i] = true
-		}
-	}
-	return filterSettings{c, o}
-}
-
-func (h *History) filter(s filterSettings){
-	filteredItems := make([]*Item, 0)
-	filteredItemRunes := make([][]rune, 0)
-
-	for _, v := range h.allItems{
-		show := !s.filters[commonCommandText[v.cmd]]
-		if show{
-			filteredItems = append(filteredItems, v)
-			filteredItemRunes = append(filteredItemRunes, v.runes)
-		}
-	}
-	h.filteredItemCache.filteredItemRunes[s] = filteredItemRunes
-	h.filteredItemCache.filteredItems[s] = filteredItems
 }
 
 func validHistLine(l string) bool {
