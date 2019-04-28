@@ -13,13 +13,15 @@ type input struct {
 type inputModel struct {
 	line string
 	cursor int
+
+	views.CellModel
 }
 
 func (m *inputModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
     //
-	style := tcell.StyleDefault
+	style := tcell.StyleDefault.Background(tcell.ColorOrange)
     var r rune
-    if m.line !=""  {
+    if m.line =="" || x >= len(m.line)  {
     	r = ' '
     } else {
     	r = rune(m.line[x])
@@ -29,7 +31,7 @@ func (m *inputModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 }
 
 func (m *inputModel) GetBounds() (int, int) {
-    return 180, 1
+    return 180, 0
 }
 
 func (m *inputModel) SetCursor(x, y int) {
@@ -46,4 +48,3 @@ func (m *inputModel) MoveCursor(offx, offy int) {
 		m.cursor = m.cursor + offx
 	}
 }
-

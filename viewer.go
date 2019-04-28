@@ -37,6 +37,11 @@ func (m *viewer) HandleEvent(e tcell.Event) bool {
 			app.Update()
 			return true
 		}
+
+		if ev.Key() == tcell.KeyRune {
+
+			m.input.model.line += string(ev.Rune())
+		}
 	}
 	return m.Panel.HandleEvent(e)
 }
@@ -52,9 +57,10 @@ func hst() []string {
 func NewViewer() *viewer {
 	v := &viewer{}
 
-	inputModel := &inputModel{}
+	inputModel := &inputModel{line:""}
 	i := &input {
 		view: views.NewTextArea(),
+		model: inputModel,
 	}
 	i.view.SetModel(inputModel)
 	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
