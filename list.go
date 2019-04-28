@@ -8,14 +8,14 @@ import (
 )
 
 type list struct {
+	view  *views.CellView
 	model *listModel
-	main *views.CellView
 
 	views.Panel
 }
 
 func (m *list) HandleEvent(ev tcell.Event) bool {
-	return m.main.HandleEvent(ev)
+	return m.view.HandleEvent(ev)
 }
 
 type listModel struct {
@@ -33,7 +33,7 @@ func (m *listModel) GetBounds() (int, int) {
 
 func (m *listModel) MoveCursor(offx, offy int) {
 	fmt.Sprintln("moving " + strconv.Itoa(offy))
-	if m.y+offy > len(m.history) {
+	if m.y+offy >= len(m.history) {
 		m.y = len(m.history) - 1
 	} else if m.y+offy < 0{
 		m.y = 0

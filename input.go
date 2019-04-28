@@ -1,12 +1,49 @@
 package gistviewer
 
-import "github.com/gdamore/tcell/views"
+import (
+	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/views"
+)
 
 type input struct {
-	views.TextArea
+	view *views.TextArea
 	model *inputModel
 }
 
 type inputModel struct {
 	line string
+	cursor int
 }
+
+func (m *inputModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
+    //
+	style := tcell.StyleDefault
+    var r rune
+    if m.line !=""  {
+    	r = ' '
+    } else {
+    	r = rune(m.line[x])
+	}
+
+	return r, style, nil, 1
+}
+
+func (m *inputModel) GetBounds() (int, int) {
+    return 180, 1
+}
+
+func (m *inputModel) SetCursor(x, y int) {
+	 m.cursor = x
+}
+
+func (m *inputModel) GetCursor() (int, int, bool, bool) {
+    return m.cursor, 0, true, false
+}
+
+func (m *inputModel) MoveCursor(offx, offy int) {
+	if m.line == "" { return }
+	if m.cursor + offx >= len(m.line) { m.cursor = len(m.line) -1 } else {
+		m.cursor = m.cursor + offx
+	}
+}
+

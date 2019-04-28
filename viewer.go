@@ -11,7 +11,7 @@ import (
 var app *views.Application
 
 type viewer struct {
-	input *views.TextArea
+	input *input
 	list  *list
 	model *listModel
 
@@ -52,22 +52,27 @@ func hst() []string {
 func NewViewer() *viewer {
 	v := &viewer{}
 
-	i := views.NewTextArea()
-	i.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
-
-	m := &listModel{history:hst(), endx:60, endy:120}
-	l := &list{
-		main: views.NewCellView(),
+	inputModel := &inputModel{}
+	i := &input {
+		view: views.NewTextArea(),
 	}
-	l.SetContent(l.main)
-	l.main.SetModel(m)
+	i.view.SetModel(inputModel)
+	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
+
+
+	listModel := &listModel{history: hst(), endx:60, endy:120}
+	l := &list{
+		view: views.NewCellView(),
+	}
+	l.SetContent(l.view)
+	l.view.SetModel(listModel)
 
 	v.input = i
 	v.list = l
 	v.SetOrientation(views.Vertical)
-	v.AddWidget(i, 0.01)
+	v.AddWidget(i.view, 0.01)
 	v.AddWidget(l, 0.5)
-	v.model = m
+	v.model = listModel
 
 	app = &views.Application{}
 	app.SetRootWidget(v)
