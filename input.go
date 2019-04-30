@@ -17,6 +17,18 @@ type inputModel struct {
 	views.CellModel
 }
 
+func (i *input) appendRune(r rune){
+	m := i.model
+	m.line += string(r)
+	m.cursor = len(m.line) - 1
+}
+
+func (i *input) deleteRune(){
+	m := i.model
+	if m.cursor == 0 || len(m.line) == 0 { return }
+	m.line = m.line[:len(m.line)-1]
+}
+
 func (m *inputModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
     //
 	style := tcell.StyleDefault.Background(tcell.ColorOrange)

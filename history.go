@@ -84,12 +84,6 @@ func NewHistory() *History {
 	return h
 }
 
-func loadHistory(done chan bool) *History{
-	h := NewHistory()
-	done <-true
-	return h
-}
-
  func (h *History) create() {
 	for _, v := range h.lines {
 		if !validHistLine(v) {

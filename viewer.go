@@ -38,8 +38,15 @@ func (m *viewer) HandleEvent(e tcell.Event) bool {
 		}
 
 		if ev.Key() == tcell.KeyRune {
+			m.input.appendRune(ev.Rune())
+			app.Update()
+			return true
+		}
 
-			m.input.model.line += string(ev.Rune())
+		if ev.Key() == tcell.KeyBackspace2|| ev.Key() == tcell.KeyBackspace {
+			m.input.deleteRune()
+			app.Update()
+			return true
 		}
 	}
 	return m.Panel.HandleEvent(e)
