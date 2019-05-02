@@ -5,7 +5,6 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"os"
-	"strconv"
 )
 
 var app *views.Application
@@ -39,6 +38,7 @@ func (m *viewer) HandleEvent(e tcell.Event) bool {
 
 		if ev.Key() == tcell.KeyRune {
 			m.input.appendRune(ev.Rune())
+			m.list.filter(m.input.model.line)
 			app.Update()
 			return true
 		}
@@ -50,14 +50,6 @@ func (m *viewer) HandleEvent(e tcell.Event) bool {
 		}
 	}
 	return m.Panel.HandleEvent(e)
-}
-
-func hst() []string {
-	h := make([]string, 100)
-	for i := 0; i < 100; i++ {
-		h[i] = "history item " + strconv.Itoa(i)
-	}
-	return h
 }
 
 func NewViewer() *viewer {
@@ -73,13 +65,14 @@ func NewViewer() *viewer {
 	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
 
-	listModel := &listModel{history: hst(), endx:60, endy:120}
+	listModel := &listModel{history: NewHistory(), endx:60, endy:120}
 	l := &list{
 		view: views.NewCellView(),
 	}
 	listModel.loadHistory()
 
 	l.SetContent(l.view)
+	l.model = listModel
 	l.view.SetModel(listModel)
 
 	v.input = i

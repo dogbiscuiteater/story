@@ -5,7 +5,7 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"strconv"
-	"time"
+	"strings"
 )
 
 type list struct {
@@ -19,8 +19,21 @@ func (m *list) HandleEvent(ev tcell.Event) bool {
 	return m.view.HandleEvent(ev)
 }
 
+func (m *list) filter(searchTerm string) {
+	v := make([]*Item,0)
+
+	for _, i := range m.model.history.allItems{
+		if strings.Contains(i.formatted, searchTerm){
+			v = append(v, i)
+		}
+	}
+	m.model.history.allVisibleItems = v
+}
+
 type listModel struct {
-	history []string
+	history *History
+	items []*Item
+	filteredHistory map[bool]string
 
 	x    int
 	y    int
@@ -28,14 +41,16 @@ type listModel struct {
 	endy int
 }
 
+func (m *listModel) filterHistory(searchTerm string){
+
+}
+
 func (m *listModel) loadHistory() *listModel{
 	done := make(chan bool, 1)
 	go func(chan bool) {
 		h := NewHistory()
 		done <-true
-		time.Sleep(2 * time.Second)
-		m.history = h.lines
-		app.Update()
+		m.history = h
 	}(done)
 
 	<- done
@@ -48,8 +63,8 @@ func (m *listModel) GetBounds() (int, int) {
 
 func (m *listModel) MoveCursor(offx, offy int) {
 	fmt.Sprintln("moving " + strconv.Itoa(offy))
-	if m.y+offy >= len(m.history) {
-		m.y = len(m.history) - 1
+	if m.y+offy >= len(m.history.allVisibleItems) {
+		m.y = len(m.history.allVisibleItems) - 1
 	} else if m.y+offy < 0{
 		m.y = 0
 	} else {
@@ -67,15 +82,17 @@ func (m *listModel) SetCursor(x int, y int) {
 
 func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 	style := tcell.StyleDefault
+
+	if y >= len(m.history.allVisibleItems) {
+		return ' ', style, nil, 1
+	}
+
 	var ch rune
 
 	if y < 0 {
 		y = 0
 	}
 
-	if y >= len(m.history) {
-		y = len(m.history) - 1
-	}
 
 	if y == m.y {
 		style = style.Background(tcell.ColorLightGreen)
@@ -85,10 +102,10 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		style = style.Foreground(tcell.ColorRed)
 	}
 
-	if x >= len(m.history[y]) {
+	if  x >= len(m.history.allVisibleItems[y].formatted) {
 		ch = ' '
 	} else {
-		ch = rune(m.history[y][x])
+		ch = rune(m.history.allVisibleItems[y].formatted[x])
 	}
 	return ch, style, nil, 1
 }

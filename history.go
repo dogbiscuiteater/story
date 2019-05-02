@@ -77,9 +77,17 @@ func NewHistory() *History {
 	h := &History{
 		ordering: DateAsc,
 		fmt:      newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "", ""),
-		lines :   strings.Split(string(historyFileContents), "\n"),
+
 	}
 
+	 lines := strings.Split(string(historyFileContents), "\n")
+	 nonEmptyLines := lines[:]
+	 for _, l:=range lines {
+		if len(strings.TrimSpace(l)) > 0 {
+			nonEmptyLines = append(nonEmptyLines, l)
+		}
+	}
+ 	h.lines = nonEmptyLines
 	h.create()
 	return h
 }
