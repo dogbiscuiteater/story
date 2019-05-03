@@ -11,7 +11,6 @@ import (
 type list struct {
 	view  *views.CellView
 	model *listModel
-
 	views.Panel
 }
 
@@ -34,6 +33,7 @@ type listModel struct {
 	history *History
 	items []*Item
 	filteredHistory map[bool]string
+	selectedItem *Item
 
 	x    int
 	y    int
@@ -96,6 +96,7 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 
 	if y == m.y {
 		style = style.Background(tcell.ColorLightGreen)
+		m.selectedItem = m.history.allVisibleItems[y]
 	}
 
 	if x < 29 {

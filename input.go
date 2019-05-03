@@ -31,7 +31,7 @@ func (i *input) deleteRune(){
 
 func (m *inputModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
     //
-	style := tcell.StyleDefault.Background(tcell.ColorOrange)
+	style := tcell.StyleDefault.Bold(true)
     var r rune
     if m.line =="" || x >= len(m.line)  {
     	r = ' '

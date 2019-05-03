@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
+	"log"
 	"os"
+	"os/exec"
 )
 
 var app *views.Application
@@ -21,6 +23,16 @@ func (m *viewer) HandleEvent(e tcell.Event) bool {
 	case *tcell.EventKey:
 		if ev.Key() == tcell.KeyEscape {
 			app.Quit()
+			return true
+		}
+
+		if ev.Key() == tcell.KeyEnter {
+			app.Quit()
+			c := exec.Command("")
+			fmt.Printf("\n\ncmd %v\n\n", m.list.model.selectedItem.cmd)
+			if err := c.Run(); err != nil {
+				log.Fatal(err)
+			}
 			return true
 		}
 
