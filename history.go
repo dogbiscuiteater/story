@@ -24,8 +24,10 @@ type History struct {
 	ordering        ordering
 	fmt             *HistoryFormat
 
-	filteredItemCache	filteredItemCache
+	aliases	aliases
 }
+
+type aliases map[string]string
 
 type filteredItemCache struct {
 	filteredItems map[filterSettings][]*Item
@@ -88,11 +90,11 @@ func NewHistory() *History {
 		}
 	}
  	h.lines = nonEmptyLines
-	h.create()
+	h.createItems()
 	return h
 }
 
- func (h *History) create() {
+ func (h *History) createItems() {
 	for _, v := range h.lines {
 		if !validHistLine(v) {
 			continue

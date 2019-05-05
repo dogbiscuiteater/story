@@ -1,13 +1,13 @@
 package gistviewer
 
+
 import (
 	"fmt"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-	"log"
 	"os"
-	"os/exec"
 )
+
 
 var app *views.Application
 
@@ -16,9 +16,11 @@ type viewer struct {
 	list  *list
 	model *listModel
 	views.Panel
+
+	Selection string
 }
 
-func (m *viewer) HandleEvent(e tcell.Event) bool {
+func (v *viewer) HandleEvent(e tcell.Event) bool {
 	switch ev := e.(type) {
 	case *tcell.EventKey:
 		if ev.Key() == tcell.KeyEscape {
@@ -27,41 +29,37 @@ func (m *viewer) HandleEvent(e tcell.Event) bool {
 		}
 
 		if ev.Key() == tcell.KeyEnter {
+			v.Selection = v.list.model.selectedItem.cmdexpr
 			app.Quit()
-			c := exec.Command("")
-			fmt.Printf("\n\ncmd %v\n\n", m.list.model.selectedItem.cmd)
-			if err := c.Run(); err != nil {
-				log.Fatal(err)
-			}
 			return true
 		}
 
 		if ev.Key() == tcell.KeyDown {
-			m.list.HandleEvent(e)
+			v.list.HandleEvent(e)
 			app.Update()
 			return true
 		}
 
 		if ev.Key() == tcell.KeyUp {
-		m.list.HandleEvent(e)
+		v.list.HandleEvent(e)
 			app.Update()
 			return true
 		}
 
 		if ev.Key() == tcell.KeyRune {
-			m.input.appendRune(ev.Rune())
-			m.list.filter(m.input.model.line)
+			v.input.appendRune(ev.Rune())
+			v.list.filter(v.input.model.line)
 			app.Update()
 			return true
 		}
 
 		if ev.Key() == tcell.KeyBackspace2|| ev.Key() == tcell.KeyBackspace {
-			m.input.deleteRune()
+			v.input.deleteRune()
 			app.Update()
 			return true
 		}
 	}
-	return m.Panel.HandleEvent(e)
+	return v.Panel.HandleEvent(e)
 }
 
 func NewViewer() *viewer {
@@ -101,5 +99,6 @@ func NewViewer() *viewer {
 		fmt.Fprintln(os.Stderr, e.Error())
 		os.Exit(1)
 	}
-	return v
+
+		return v
 }
