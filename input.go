@@ -20,7 +20,7 @@ type inputModel struct {
 
 func (m *inputModel) appendRune(r rune){
 	m.line += string(r)
-	m.cursor = len(m.line) - 1
+	m.cursor = len(m.line)
 }
 
 func (m *inputModel) deleteRune(){
