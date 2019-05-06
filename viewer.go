@@ -14,6 +14,9 @@ var app *views.Application
 type viewer struct {
 	input *input
 	list  *list
+
+	status *views.SimpleStyledTextBar
+
 	model *listModel
 	views.Panel
 
@@ -100,6 +103,11 @@ func NewViewer() *viewer {
 	v.AddWidget(i.view, 0.01)
 	v.AddWidget(l, 0.5)
 	v.model = listModel
+
+
+	v.status = views.NewSimpleStyledTextBar()
+	v.SetStatus(v.status)
+
 
 	app = &views.Application{}
 	app.SetRootWidget(v)

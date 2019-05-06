@@ -3,6 +3,7 @@ package gistviewer
 import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
+	"strings"
 )
 
 type input struct {
@@ -20,13 +21,22 @@ type inputModel struct {
 
 func (m *inputModel) appendRune(r rune){
 	m.line += string(r)
+	m.updateTerms()
 	m.cursor = len(m.line)
 }
 
 func (m *inputModel) deleteRune(){
 	if m.cursor == 0 || len(m.line) == 0 { return }
 	m.line = m.line[:len(m.line)-1]
+	m.updateTerms()
 	m.cursor = len(m.line)
+}
+
+func (m *inputModel) updateTerms() {
+	m.terms = make([]string, 0)
+	for _, t := range strings.Split(m.line, " "){
+		m.terms = append(m.terms, t)
+	}
 }
 
 func (i *input) terms() []string {

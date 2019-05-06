@@ -1,10 +1,8 @@
 package gistviewer
 
 import (
-	"fmt"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-	"strconv"
 	"strings"
 )
 
@@ -19,6 +17,12 @@ func (m *list) HandleEvent(ev tcell.Event) bool {
 }
 
 func (m *list) filter(searchTerm string) {
+	m.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
+	if strings.TrimSpace(searchTerm) == "" {
+		m.model.history.allVisibleItems = m.model.history.allItems
+		return
+	}
+
 	v := make([]*Item,0)
 
 	for _, i := range m.model.history.allItems{
@@ -31,12 +35,15 @@ func (m *list) filter(searchTerm string) {
 	if len(m.model.history.allVisibleItems)>0 {
 		m.model.selectedItem = m.model.history.allVisibleItems[0]
 	}
+
+
+	m.model.endy = len(m.model.history.allVisibleItems)-1
+	m.model.y = 0
 }
 
 type listModel struct {
 	history *History
 	items []*Item
-	filteredHistory map[bool]string
 	selectedItem *Item
 
 	x    int
@@ -66,7 +73,6 @@ func (m *listModel) GetBounds() (int, int) {
 }
 
 func (m *listModel) MoveCursor(offx, offy int) {
-	fmt.Sprintln("moving " + strconv.Itoa(offy))
 	if m.y+offy >= len(m.history.allVisibleItems) {
 		m.y = len(m.history.allVisibleItems) - 1
 	} else if m.y+offy < 0{
