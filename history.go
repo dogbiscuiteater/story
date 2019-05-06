@@ -10,8 +10,8 @@ import (
 type ordering int
 
 const (
-	DateAsc ordering = iota
-	DateDesc
+	DateDesc ordering = iota
+	DateAsc
 	FrequecyDesc
 )
 
@@ -19,7 +19,6 @@ type History struct {
 	allItems [] 	*Item
 	wordsToItems 	map[string][]*Item
 	allVisibleItems [] *Item
-	allItemsRunes   [][] rune
 	lines           [] string
 	ordering        ordering
 	fmt             *HistoryFormat
@@ -77,13 +76,13 @@ func NewHistory() *History {
 	historyFileContents, _ := ioutil.ReadFile(histfileName)
 
 	h := &History{
-		ordering: DateAsc,
+		ordering: DateDesc,
 		fmt:      newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "", ""),
 
 	}
 
 	 lines := strings.Split(string(historyFileContents), "\n")
-	 nonEmptyLines := lines[:]
+	 nonEmptyLines := make([]string,0)
 	 for _, l:=range lines {
 		if len(strings.TrimSpace(l)) > 0 {
 			nonEmptyLines = append(nonEmptyLines, l)
@@ -95,13 +94,13 @@ func NewHistory() *History {
 }
 
  func (h *History) createItems() {
-	for _, v := range h.lines {
+	for i:=len(h.lines)-1; i >=0; i-- {
+		v := h.lines[i]
 		if !validHistLine(v) {
 			continue
 		}
 		i := newItem(v, h.fmt)
 		h.allItems = append(h.allItems, i)
-		h.allItemsRunes = append(h.allItemsRunes, i.runes)
 	}
 	h.allVisibleItems = h.allItems
 }

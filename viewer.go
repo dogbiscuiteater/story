@@ -41,26 +41,36 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 		}
 
 		if ev.Key() == tcell.KeyUp {
-		v.list.HandleEvent(e)
+			v.list.HandleEvent(e)
 			app.Update()
 			return true
 		}
 
 		if ev.Key() == tcell.KeyRune {
-			v.input.appendRune(ev.Rune())
-			v.list.filter(v.input.model.line)
+			v.addRuneToSearch(ev.Rune())
 			app.Update()
 			return true
 		}
 
 		if ev.Key() == tcell.KeyBackspace2|| ev.Key() == tcell.KeyBackspace {
-			v.input.deleteRune()
+			v.deleteRuneFromSearch()
 			app.Update()
 			return true
 		}
 	}
 	return v.Panel.HandleEvent(e)
 }
+
+func (v *viewer) addRuneToSearch(r rune){
+	v.input.model.appendRune(r)
+	v.list.filter(v.input.line())
+}
+
+func (v *viewer) deleteRuneFromSearch(){
+	v.input.model.deleteRune()
+	v.list.filter(v.input.line())
+}
+
 
 func NewViewer() *viewer {
 
@@ -74,12 +84,11 @@ func NewViewer() *viewer {
 	i.view.SetModel(inputModel)
 	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
-
-	listModel := &listModel{history: NewHistory(), endx:60, endy:120}
+	history := NewHistory()
+	listModel := &listModel{history: history, endx:60, endy:len(history.allVisibleItems)}
 	l := &list{
 		view: views.NewCellView(),
 	}
-	listModel.loadHistory()
 
 	l.SetContent(l.view)
 	l.model = listModel

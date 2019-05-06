@@ -27,6 +27,10 @@ func (m *list) filter(searchTerm string) {
 		}
 	}
 	m.model.history.allVisibleItems = v
+
+	if len(m.model.history.allVisibleItems)>0 {
+		m.model.selectedItem = m.model.history.allVisibleItems[0]
+	}
 }
 
 type listModel struct {
@@ -58,7 +62,7 @@ func (m *listModel) loadHistory() *listModel{
 }
 
 func (m *listModel) GetBounds() (int, int) {
-	return m.endx, m.endy
+	return m.endx, len(m.history.allVisibleItems)
 }
 
 func (m *listModel) MoveCursor(offx, offy int) {

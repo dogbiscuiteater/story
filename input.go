@@ -12,21 +12,29 @@ type input struct {
 
 type inputModel struct {
 	line string
+	terms []string
 	cursor int
 
 	views.CellModel
 }
 
-func (i *input) appendRune(r rune){
-	m := i.model
+func (m *inputModel) appendRune(r rune){
 	m.line += string(r)
 	m.cursor = len(m.line) - 1
 }
 
-func (i *input) deleteRune(){
-	m := i.model
+func (m *inputModel) deleteRune(){
 	if m.cursor == 0 || len(m.line) == 0 { return }
 	m.line = m.line[:len(m.line)-1]
+	m.cursor = len(m.line)
+}
+
+func (i *input) terms() []string {
+	return i.model.terms
+}
+
+func (i *input) line() string {
+	return i.model.line
 }
 
 func (m *inputModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
@@ -51,7 +59,7 @@ func (m *inputModel) SetCursor(x, y int) {
 }
 
 func (m *inputModel) GetCursor() (int, int, bool, bool) {
-    return m.cursor, 0, true, false
+    return m.cursor, 0, true, true
 }
 
 func (m *inputModel) MoveCursor(offx, offy int) {
