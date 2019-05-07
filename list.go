@@ -3,6 +3,7 @@ package gistviewer
 import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
+	"regexp"
 	"strings"
 )
 
@@ -16,35 +17,49 @@ func (m *list) HandleEvent(ev tcell.Event) bool {
 	return m.view.HandleEvent(ev)
 }
 
-func (m *list) filter(searchTerm string) {
+func (m *list) filter(searchTerms []string) {
+	h := make(map[*Item][][]int, 0)
+	m.model.highlights = h
 	m.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
-	if strings.TrimSpace(searchTerm) == "" {
-		m.model.history.allVisibleItems = m.model.history.allItems
-		return
-	}
+	if len(searchTerms) ==0 { return }
 
-	v := make([]*Item,0)
+	v := make([]*Item, 0)
+	for _, searchTerm := range searchTerms {
+		if strings.TrimSpace(searchTerm) == "" {
+			m.model.history.allVisibleItems = m.model.history.allItems
+			return
+		}
 
-	for _, i := range m.model.history.allItems{
-		if strings.Contains(i.formatted, searchTerm){
-			v = append(v, i)
+
+		for _, item := range m.model.history.allItems {
+			if strings.Contains(item.formatted, searchTerm) {
+				re := regexp.MustCompile(searchTerm)
+				v = append(v, item)
+				for _, indices := range re.FindAllStringIndex(item.formatted, 10){
+					h[item]=append(h[item],indices)
+				}
+			}
 		}
 	}
+
+	//sort.Slice(v, func(i,j int) bool { v[i]. }())
 	m.model.history.allVisibleItems = v
 
-	if len(m.model.history.allVisibleItems)>0 {
+	if len(m.model.history.allVisibleItems) > 0 {
 		m.model.selectedItem = m.model.history.allVisibleItems[0]
 	}
 
-
-	m.model.endy = len(m.model.history.allVisibleItems)-1
+	m.model.endy = len(m.model.history.allVisibleItems) - 1
 	m.model.y = 0
 }
 
+// Row number, followed by start and end locations in the item to identify the highlighted span of runes
+type highlightedSpan [3]int
+
 type listModel struct {
-	history *History
-	items []*Item
+	history      *History
 	selectedItem *Item
+	highlights map[*Item][][]int
 
 	x    int
 	y    int
@@ -52,19 +67,15 @@ type listModel struct {
 	endy int
 }
 
-func (m *listModel) filterHistory(searchTerm string){
-
-}
-
-func (m *listModel) loadHistory() *listModel{
+func (m *listModel) loadHistory() *listModel {
 	done := make(chan bool, 1)
 	go func(chan bool) {
 		h := NewHistory()
-		done <-true
+		done <- true
 		m.history = h
 	}(done)
 
-	<- done
+	<-done
 	return m
 }
 
@@ -75,7 +86,7 @@ func (m *listModel) GetBounds() (int, int) {
 func (m *listModel) MoveCursor(offx, offy int) {
 	if m.y+offy >= len(m.history.allVisibleItems) {
 		m.y = len(m.history.allVisibleItems) - 1
-	} else if m.y+offy < 0{
+	} else if m.y+offy < 0 {
 		m.y = 0
 	} else {
 		m.y += offy
@@ -103,9 +114,8 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		y = 0
 	}
 
-
 	if y == m.y {
-		style = style.Background(tcell.ColorLightGreen)
+		style = style.Background(tcell.ColorOldLace).Foreground(tcell.ColorBlack).Bold(true)
 		m.selectedItem = m.history.allVisibleItems[y]
 	}
 
@@ -113,10 +123,20 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		style = style.Foreground(tcell.ColorRed)
 	}
 
-	if  x >= len(m.history.allVisibleItems[y].formatted) {
+	if x >= len(m.history.allVisibleItems[y].formatted) {
 		ch = ' '
 	} else {
-		ch = rune(m.history.allVisibleItems[y].formatted[x])
+		i := m.history.allVisibleItems[y]
+
+		ch = rune(i.formatted[x])
+		if m.highlights[i] != nil {
+			for _, h := range m.highlights[i]{
+				if x >= h[0] && x < h[1]  {
+					style = style.Background(tcell.ColorOrange).Foreground(tcell.ColorBlack).Bold(true)
+					break
+				}
+			}
+		}
 	}
 	return ch, style, nil, 1
 }

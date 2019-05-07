@@ -1,13 +1,11 @@
 package gistviewer
 
-
 import (
 	"fmt"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"os"
 )
-
 
 var app *views.Application
 
@@ -50,12 +48,13 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 		}
 
 		if ev.Key() == tcell.KeyRune {
+			v.list.view.SetCursor(0,0)
 			v.addRuneToSearch(ev.Rune())
 			app.Update()
 			return true
 		}
 
-		if ev.Key() == tcell.KeyBackspace2|| ev.Key() == tcell.KeyBackspace {
+		if ev.Key() == tcell.KeyBackspace2 || ev.Key() == tcell.KeyBackspace {
 			v.deleteRuneFromSearch()
 			app.Update()
 			return true
@@ -64,31 +63,30 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 	return v.Panel.HandleEvent(e)
 }
 
-func (v *viewer) addRuneToSearch(r rune){
+func (v *viewer) addRuneToSearch(r rune) {
 	v.input.model.appendRune(r)
-	v.list.filter(v.input.line())
+	v.list.filter(v.input.terms())
 }
 
-func (v *viewer) deleteRuneFromSearch(){
+func (v *viewer) deleteRuneFromSearch() {
 	v.input.model.deleteRune()
-	v.list.filter(v.input.line())
+	v.list.filter(v.input.terms())
 }
-
 
 func NewViewer() *viewer {
 
 	v := &viewer{}
 
-	inputModel := &inputModel{line:""}
-	i := &input {
-		view: views.NewTextArea(),
+	inputModel := &inputModel{line: ""}
+	i := &input{
+		view:  views.NewTextArea(),
 		model: inputModel,
 	}
 	i.view.SetModel(inputModel)
 	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
 	history := NewHistory()
-	listModel := &listModel{history: history, endx:60, endy:len(history.allVisibleItems)}
+	listModel := &listModel{history: history, endx: 60, endy: len(history.allVisibleItems)}
 	l := &list{
 		view: views.NewCellView(),
 	}
@@ -104,10 +102,8 @@ func NewViewer() *viewer {
 	v.AddWidget(l, 0.5)
 	v.model = listModel
 
-
 	v.status = views.NewSimpleStyledTextBar()
 	v.SetStatus(v.status)
-
 
 	app = &views.Application{}
 	app.SetRootWidget(v)
@@ -117,5 +113,5 @@ func NewViewer() *viewer {
 		os.Exit(1)
 	}
 
-		return v
+	return v
 }

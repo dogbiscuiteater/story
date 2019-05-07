@@ -7,26 +7,28 @@ import (
 )
 
 type input struct {
-	view *views.TextArea
+	view  *views.TextArea
 	model *inputModel
 }
 
 type inputModel struct {
-	line string
-	terms []string
+	line   string
+	terms  []string
 	cursor int
 
 	views.CellModel
 }
 
-func (m *inputModel) appendRune(r rune){
+func (m *inputModel) appendRune(r rune) {
 	m.line += string(r)
 	m.updateTerms()
 	m.cursor = len(m.line)
 }
 
-func (m *inputModel) deleteRune(){
-	if m.cursor == 0 || len(m.line) == 0 { return }
+func (m *inputModel) deleteRune() {
+	if m.cursor == 0 || len(m.line) == 0 {
+		return
+	}
 	m.line = m.line[:len(m.line)-1]
 	m.updateTerms()
 	m.cursor = len(m.line)
@@ -34,8 +36,8 @@ func (m *inputModel) deleteRune(){
 
 func (m *inputModel) updateTerms() {
 	m.terms = make([]string, 0)
-	for _, t := range strings.Split(m.line, " "){
-		m.terms = append(m.terms, t)
+	for _, t := range strings.Split(m.line, " ") {
+		 m.terms = append(m.terms, strings.TrimSpace(t))
 	}
 }
 
@@ -48,33 +50,37 @@ func (i *input) line() string {
 }
 
 func (m *inputModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
-    //
+	//
 	style := tcell.StyleDefault.Bold(true)
-    var r rune
-    if m.line =="" || x >= len(m.line)  {
-    	r = ' '
-    } else {
-    	r = rune(m.line[x])
+	var r rune
+	if m.line == "" || x >= len(m.line) {
+		r = ' '
+	} else {
+		r = rune(m.line[x])
 	}
 
 	return r, style, nil, 1
 }
 
 func (m *inputModel) GetBounds() (int, int) {
-    return 180, 0
+	return 180, 0
 }
 
 func (m *inputModel) SetCursor(x, y int) {
-	 m.cursor = x
+	m.cursor = x
 }
 
 func (m *inputModel) GetCursor() (int, int, bool, bool) {
-    return m.cursor, 0, true, true
+	return m.cursor, 0, true, true
 }
 
 func (m *inputModel) MoveCursor(offx, offy int) {
-	if m.line == "" { return }
-	if m.cursor + offx >= len(m.line) { m.cursor = len(m.line) -1 } else {
+	if m.line == "" {
+		return
+	}
+	if m.cursor+offx >= len(m.line) {
+		m.cursor = len(m.line) - 1
+	} else {
 		m.cursor = m.cursor + offx
 	}
 }
