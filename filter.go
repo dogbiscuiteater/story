@@ -14,18 +14,22 @@ type highlights struct {
 
 func (m *list) filter(searchTerms []string) {
 
-	// Create a mapping of Item to text span (
+	// Create a mapping of Item to text span
 	spans := make(map[*item][][]int, 0)
 	h := make(map[*item]highlights, 0)
 
 	m.model.highlights = h
+
+	// Nudge the view port to reveal the top line. TODO: find out why the top line gets hidden.
 	m.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
 
+	// If the search string is blank then show all of the items.
 	if len(searchTerms) == 0 {
 		m.model.history.allVisibleItems = m.model.history.allItems
 		return
 	}
-	
+
+	//
 	v := make([]*item, 0)
 	matches := make(map[*item]int)
 	var item *item
@@ -34,7 +38,8 @@ func (m *list) filter(searchTerms []string) {
 		for _, searchTerm := range searchTerms {
 			if strings.Contains(item.formatted, searchTerm) {
 				matches[item]++
-				re := regexp.MustCompile(searchTerm)
+
+				re := regexp.MustCompile(regexp.QuoteMeta(searchTerm))
 
 				for _, indices := range re.FindAllStringIndex(item.formatted, 10) {
 					spans[item] = append(spans[item], indices)
