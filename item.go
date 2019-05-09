@@ -6,7 +6,8 @@ import (
 	"time"
 )
 
-type Item struct {
+// Item is specifically an entry in a shell history.
+type item struct {
 	timestamp time.Time
 	fmt       *HistoryFormat
 	entry     string
@@ -18,8 +19,8 @@ type Item struct {
 	words     []string
 }
 
-func newItem(entry string, fmt *HistoryFormat) *Item {
-	h := &Item{
+func newItem(entry string, fmt *HistoryFormat) *item {
+	h := &item{
 		entry: entry,
 		fmt:   fmt,
 	}
@@ -27,8 +28,7 @@ func newItem(entry string, fmt *HistoryFormat) *Item {
 	return h
 }
 
-func (i *Item) split() {
-
+func (i *item) split() {
 	elements := strings.Split(i.entry, ";")
 
 	// Get the timestamp element

@@ -3,8 +3,6 @@ package gistviewer
 import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-	"regexp"
-	"strings"
 )
 
 type list struct {
@@ -17,49 +15,13 @@ func (m *list) HandleEvent(ev tcell.Event) bool {
 	return m.view.HandleEvent(ev)
 }
 
-func (m *list) filter(searchTerms []string) {
-	h := make(map[*Item][][]int, 0)
-	m.model.highlights = h
-	m.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
-	if len(searchTerms) ==0 { return }
-
-	v := make([]*Item, 0)
-	for _, searchTerm := range searchTerms {
-		if strings.TrimSpace(searchTerm) == "" {
-			m.model.history.allVisibleItems = m.model.history.allItems
-			return
-		}
-
-
-		for _, item := range m.model.history.allItems {
-			if strings.Contains(item.formatted, searchTerm) {
-				re := regexp.MustCompile(searchTerm)
-				v = append(v, item)
-				for _, indices := range re.FindAllStringIndex(item.formatted, 10){
-					h[item]=append(h[item],indices)
-				}
-			}
-		}
-	}
-
-	//sort.Slice(v, func(i,j int) bool { v[i]. }())
-	m.model.history.allVisibleItems = v
-
-	if len(m.model.history.allVisibleItems) > 0 {
-		m.model.selectedItem = m.model.history.allVisibleItems[0]
-	}
-
-	m.model.endy = len(m.model.history.allVisibleItems) - 1
-	m.model.y = 0
-}
-
 // Row number, followed by start and end locations in the item to identify the highlighted span of runes
 type highlightedSpan [3]int
 
 type listModel struct {
 	history      *History
-	selectedItem *Item
-	highlights map[*Item][][]int
+	selectedItem *item
+	highlights map[*item]highlights
 
 	x    int
 	y    int
@@ -129,8 +91,8 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		i := m.history.allVisibleItems[y]
 
 		ch = rune(i.formatted[x])
-		if m.highlights[i] != nil {
-			for _, h := range m.highlights[i]{
+		if m.highlights[i].spans != nil {
+			for _, h := range m.highlights[i].spans{
 				if x >= h[0] && x < h[1]  {
 					style = style.Background(tcell.ColorOrange).Foreground(tcell.ColorBlack).Bold(true)
 					break

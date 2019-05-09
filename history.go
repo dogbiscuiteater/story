@@ -7,20 +7,12 @@ import (
 	"strings"
 )
 
-type ordering int
-
-const (
-	DateDesc ordering = iota
-	DateAsc
-	FrequecyDesc
-)
 
 type History struct {
-	allItems        []*Item
-	wordsToItems    map[string][]*Item
-	allVisibleItems []*Item
+	allItems        []*item
+	wordsToItems    map[string][]*item
+	allVisibleItems []*item
 	lines           []string
-	ordering        ordering
 	fmt             *HistoryFormat
 
 	aliases aliases
@@ -28,31 +20,13 @@ type History struct {
 
 type aliases map[string]string
 
-type filteredItemCache struct {
-	filteredItems     map[filterSettings][]*Item
-	filteredItemRunes map[filterSettings][][]rune
-}
-
+//HistoryFormat is the currently selected format of a history Item
 type HistoryFormat struct {
 	timestamp string
 	entry     string
 	cmd       string
 }
 
-type filterSettings struct {
-	filters  [5]bool
-	ordering ordering
-}
-
-func (h *History) Ordering() ordering {
-	return h.ordering
-}
-
-func (h *History) Order(o ordering) {
-	h.ordering = o
-}
-
-//NewHistformat
 func newHistoryFormat(timestamp, entry, expr string) *HistoryFormat {
 	f := &HistoryFormat{
 		timestamp: timestamp,
@@ -60,6 +34,7 @@ func newHistoryFormat(timestamp, entry, expr string) *HistoryFormat {
 	}
 	return f
 }
+
 
 func NewHistory() *History {
 	viper.AutomaticEnv()
@@ -74,7 +49,6 @@ func NewHistory() *History {
 	historyFileContents, _ := ioutil.ReadFile(histfileName)
 
 	h := &History{
-		ordering: DateDesc,
 		fmt:      newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "", ""),
 	}
 

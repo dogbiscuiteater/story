@@ -35,6 +35,16 @@ func (m *inputModel) deleteRune() {
 }
 
 func (m *inputModel) updateTerms() {
+	// If the line is blank, then clear the model's terms.
+	if len(m.line) == 0 {
+		m.terms = make([]string, 0)
+		return
+	}
+
+	// If the last character in the line is a space, then ignore it.
+	if m.line[len(m.line)-1] == ' ' { return }
+
+	// Otherwise, re-compute the model terms.
 	m.terms = make([]string, 0)
 	for _, t := range strings.Split(m.line, " ") {
 		 m.terms = append(m.terms, strings.TrimSpace(t))

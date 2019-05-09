@@ -1,7 +1,6 @@
 package gistviewer
 
 import (
-	"fmt"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"os"
@@ -109,7 +108,7 @@ func NewViewer() *viewer {
 	app.SetRootWidget(v)
 
 	if e := app.Run(); e != nil {
-		fmt.Fprintln(os.Stderr, e.Error())
+        println(e.Error())
 		os.Exit(1)
 	}
 
