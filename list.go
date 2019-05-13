@@ -9,6 +9,8 @@ type list struct {
 	view  *views.CellView
 	model *listModel
 	views.Panel
+
+
 }
 
 func (m *list) HandleEvent(ev tcell.Event) bool {
@@ -19,9 +21,11 @@ func (m *list) HandleEvent(ev tcell.Event) bool {
 type highlightedSpan [3]int
 
 type listModel struct {
-	history      *History
-	selectedItem *item
-	highlights map[*item]highlights
+	history        *History
+	selectedItem   *item
+	highlights     map[*item]highlights
+	groupedItemMap map[string][]*item
+		groupedItems	[]*item
 
 	x    int
 	y    int

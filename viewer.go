@@ -58,6 +58,20 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 			app.Update()
 			return true
 		}
+
+		//if (ev.Key() == tcell.KeyCtrlG) {
+		//	groupedItems := v.list.model.groupedItems
+		//	v.list.model.history.allVisibleItems = groupedItems
+		//	//allItems := v.list.model.history.allItems
+		//	//groupedItemMap := v.list.model.groupedItemMap
+		//	//sort.Slice(groupedItemMap, func(i,j int)bool {
+		//	//	return len(groupedItemMap[allItems[i]) > len(groupedItemMap[allItems[j].cmdexpr])
+		//	//})
+		//	for _, e:= range groupedItems {
+		//	}
+		//	app.Update()
+		//	return true
+		//}
 	}
 	return v.Panel.HandleEvent(e)
 }
@@ -93,6 +107,7 @@ func NewViewer() *viewer {
 	l.SetContent(l.view)
 	l.model = listModel
 	l.view.SetModel(listModel)
+	l.collect()
 
 	v.input = i
 	v.list = l
