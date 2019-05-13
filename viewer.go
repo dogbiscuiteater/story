@@ -4,6 +4,7 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"os"
+	"strconv"
 )
 
 var app *views.Application
@@ -47,7 +48,7 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 		}
 
 		if ev.Key() == tcell.KeyRune {
-			v.list.view.SetCursor(0,0)
+			v.list.view.SetCursor(0, 0)
 			v.addRuneToSearch(ev.Rune())
 			app.Update()
 			return true
@@ -59,19 +60,20 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 			return true
 		}
 
-		//if (ev.Key() == tcell.KeyCtrlG) {
-		//	groupedItems := v.list.model.groupedItems
-		//	v.list.model.history.allVisibleItems = groupedItems
-		//	//allItems := v.list.model.history.allItems
-		//	//groupedItemMap := v.list.model.groupedItemMap
-		//	//sort.Slice(groupedItemMap, func(i,j int)bool {
-		//	//	return len(groupedItemMap[allItems[i]) > len(groupedItemMap[allItems[j].cmdexpr])
-		//	//})
-		//	for _, e:= range groupedItems {
-		//	}
-		//	app.Update()
-		//	return true
-		//}
+		if (ev.Key() == tcell.KeyCtrlG) {
+			groupedItems := v.list.model.groupedItems
+			v.list.model.history.allVisibleItems = groupedItems
+			//allItems := v.list.model.history.allItems
+			groupedItemMap := v.list.model.groupedItemMap
+			//sort.Slice(groupedItemMap, func(i,j int)bool {
+			//	return len(groupedItemMap[allItems[i]) > len(groupedItemMap[allItems[j].cmdexpr])
+			//})
+			for _, e := range groupedItems {
+				e.formatted += strconv.Itoa(len(groupedItemMap[e.cmdexpr]))
+			}
+			app.Update()
+			return true
+		}
 	}
 	return v.Panel.HandleEvent(e)
 }
@@ -99,7 +101,10 @@ func NewViewer() *viewer {
 	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
 	history := NewHistory()
-	listModel := &listModel{history: history, endx: 60, endy: len(history.allVisibleItems)}
+	listModel := &listModel{
+		history: history, endx: 60, endy: len(history.allVisibleItems),
+		groupedItemMap: make(map[string][]*item, 0),
+	}
 	l := &list{
 		view: views.NewCellView(),
 	}
@@ -123,7 +128,7 @@ func NewViewer() *viewer {
 	app.SetRootWidget(v)
 
 	if e := app.Run(); e != nil {
-        println(e.Error())
+		println(e.Error())
 		os.Exit(1)
 	}
 
