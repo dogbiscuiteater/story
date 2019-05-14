@@ -1,5 +1,10 @@
 package gistviewer
 
+import (
+	"strconv"
+	"strings"
+)
+
 // Collector gathers together identical lines
 func (l *list) collect(){
 	cmdExprs := make(map[string]bool, len(l.model.history.allItems))
@@ -11,5 +16,11 @@ func (l *list) collect(){
 			l.model.groupedItems = append(l.model.groupedItems, i)
 			cmdExprs[i.cmdexpr] = true
 		}
+	}
+
+	for _, i := range l.model.history.allItems {
+		count := "(" + strconv.Itoa(len(l.model.groupedItemMap[i.cmdexpr])) + ")"
+		padding := strings.Repeat(" ", 10-len(count))
+		i.grouped =  count + padding + i.cmdexpr
 	}
 }

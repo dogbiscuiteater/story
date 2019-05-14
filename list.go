@@ -3,14 +3,22 @@ package gistviewer
 import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
+	"sort"
+)
+
+
+type mode int
+
+const (
+	dateOrder mode = iota
+	grouped
+
 )
 
 type list struct {
 	view  *views.CellView
 	model *listModel
 	views.Panel
-
-
 }
 
 func (m *list) HandleEvent(ev tcell.Event) bool {
@@ -25,12 +33,29 @@ type listModel struct {
 	selectedItem   *item
 	highlights     map[*item]highlights
 	groupedItemMap map[string][]*item
-		groupedItems	[]*item
+	groupedItems	[]*item
+	mode mode
 
 	x    int
 	y    int
 	endx int
 	endy int
+}
+
+func (l *list)switchMode() {
+	m := l.model.mode
+	if m == grouped {
+		l.model.mode = dateOrder
+	} else {
+		l.model.mode = grouped
+		groupedItems := l.model.groupedItems
+		l.model.history.allVisibleItems = groupedItems
+		sort.Slice(groupedItems,
+			func(i, j int) bool {
+				return len(l.model.groupedItemMap[groupedItems[i].cmdexpr]) > len(l.model.groupedItemMap[groupedItems[j].cmdexpr])
+			},
+		)
+	}
 }
 
 func (m *listModel) loadHistory() *listModel {
@@ -85,16 +110,28 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		m.selectedItem = m.history.allVisibleItems[y]
 	}
 
-	if x < 29 {
+	selectedMode := m.mode
+	leftMargin := 0
+	text := m.history.allVisibleItems[y].formatted
+
+	if selectedMode == dateOrder {
+		leftMargin = 29
+	} else {
+		leftMargin = 10
+		text = m.history.allVisibleItems[y].grouped
+	}
+
+	if x < leftMargin {
 		style = style.Foreground(tcell.ColorRed)
 	}
 
-	if x >= len(m.history.allVisibleItems[y].formatted) {
+
+	if x >= len(text) {
 		ch = ' '
 	} else {
 		i := m.history.allVisibleItems[y]
 
-		ch = rune(i.formatted[x])
+		ch = rune(text[x])
 		if m.highlights[i].spans != nil {
 			for _, h := range m.highlights[i].spans{
 				if x >= h[0] && x < h[1]  {

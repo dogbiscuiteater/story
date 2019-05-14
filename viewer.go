@@ -4,7 +4,6 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"os"
-	"strconv"
 )
 
 var app *views.Application
@@ -61,16 +60,15 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 		}
 
 		if (ev.Key() == tcell.KeyCtrlG) {
-			groupedItems := v.list.model.groupedItems
-			v.list.model.history.allVisibleItems = groupedItems
-			//allItems := v.list.model.history.allItems
-			groupedItemMap := v.list.model.groupedItemMap
-			//sort.Slice(groupedItemMap, func(i,j int)bool {
-			//	return len(groupedItemMap[allItems[i]) > len(groupedItemMap[allItems[j].cmdexpr])
-			//})
-			for _, e := range groupedItems {
-				e.formatted += strconv.Itoa(len(groupedItemMap[e.cmdexpr]))
-			}
+			v.list.switchMode()
+
+
+			// TODO Switch between grouped (with count) and ungrouped (with date) for formatted item string
+			//groupedItemMap := v.list.model.groupedItemMap
+			////for _, e := range groupedItems {
+			//	e.formatted += strconv.Itoa(len(groupedItemMap[e.cmdexpr]))
+			//}
+
 			app.Update()
 			return true
 		}

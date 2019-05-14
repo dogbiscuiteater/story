@@ -12,6 +12,7 @@ type item struct {
 	fmt       *HistoryFormat
 	entry     string
 	formatted string
+	grouped	  string
 	runes     []rune
 	cmdexpr   string
 	cmd       string
