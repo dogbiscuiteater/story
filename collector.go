@@ -20,7 +20,7 @@ func (l *list) collect(){
 
 	for _, i := range l.model.history.allItems {
 		count := "(" + strconv.Itoa(len(l.model.groupedItemMap[i.cmdexpr])) + ")"
-		padding := strings.Repeat(" ", 10-len(count))
-		i.grouped =  count + padding + i.cmdexpr
+		padding := strings.Repeat(" ", 29-len(count))
+		i.grouped =  count + padding + " : " + i.cmdexpr
 	}
 }

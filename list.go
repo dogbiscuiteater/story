@@ -111,13 +111,10 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 	}
 
 	selectedMode := m.mode
-	leftMargin := 0
+	leftMargin := 29
 	text := m.history.allVisibleItems[y].formatted
 
-	if selectedMode == dateOrder {
-		leftMargin = 29
-	} else {
-		leftMargin = 10
+	if selectedMode == grouped {
 		text = m.history.allVisibleItems[y].grouped
 	}
 
