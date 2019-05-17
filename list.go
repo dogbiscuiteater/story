@@ -12,7 +12,6 @@ type mode int
 const (
 	dateOrder mode = iota
 	grouped
-
 )
 
 type list struct {
@@ -46,15 +45,16 @@ func (l *list)switchMode() {
 	m := l.model.mode
 	if m == grouped {
 		l.model.mode = dateOrder
+		l.model.allVisibleItems = l.model.allItems
 	} else {
 		l.model.mode = grouped
-		groupedItems := l.model.groupedItems
-		l.model.allVisibleItems = groupedItems
+		l.model.allVisibleItems = l.model.groupedItems
 	}
 	l.model.sort()
 }
 
 func (m *listModel) sort() {
+	sort.Slice(m.allVisibleItems, m.sortByHighglights())
 	var sortFunc func(i, j int) bool
 	if m.mode == grouped {
 		sortFunc = m.sortGrouped()
@@ -62,24 +62,33 @@ func (m *listModel) sort() {
 		sortFunc = m.sortInDateOrder()
 	}
 	sort.Slice(m.allVisibleItems, sortFunc)
-	//sort.Slice(m.allVisibleItems, m.sortByHighglights())
 }
 
 func (m *listModel) sortGrouped() func(i, j int) bool {
 	return func(i, j int) bool {
-		return len(m.groupedItemMap[m.groupedItems[i].cmdexpr]) > len(m.groupedItemMap[m.groupedItems[j].cmdexpr])
+		a := m.groupedItemMap[m.groupedItems[i].cmdexpr]
+		b := m.groupedItemMap[m.groupedItems[j].cmdexpr]
+		if m.highlights[a[0]].matches == m.highlights[b[0]].matches {
+			return len(m.groupedItemMap[m.groupedItems[i].cmdexpr]) > len(m.groupedItemMap[m.groupedItems[j].cmdexpr])
+		}
+		return m.highlights[a[0]].matches > m.highlights[b[0]].matches
 	}
 }
 
 func (m *listModel) sortInDateOrder() func (i, j int) bool {
 	return func(i, j int) bool {
-		return m.allItems[i].timestamp.After(m.groupedItems[j].timestamp)
+		a := m.allItems[i]
+		b := m.allItems[j]
+		if m.highlights[a].matches == m.highlights[b].matches {
+			return m.allItems[i].timestamp.After(m.allItems[j].timestamp)
+		}
+		return m.highlights[a].matches > m.highlights[b].matches
 	}
 }
 
 func (m *listModel) sortByHighglights() func (i, j int) bool {
 	return func(i, j int) bool {
-		return m.highlights[m.allItems[i]].matches < m.highlights[m.allItems[j]].matches
+		return m.highlights[m.allVisibleItems[i]].matches > m.highlights[m.allVisibleItems[j]].matches
 	}
 }
 
