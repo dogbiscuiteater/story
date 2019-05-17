@@ -21,16 +21,16 @@ type list struct {
 	views.Panel
 }
 
-func (m *list) HandleEvent(ev tcell.Event) bool {
-	return m.view.HandleEvent(ev)
+func (l *list) HandleEvent(ev tcell.Event) bool {
+	return l.view.HandleEvent(ev)
 }
 
-// Row number, followed by start and end locations in the item to identify the highlighted span of runes
-type highlightedSpan [3]int
-
 type listModel struct {
+
 	history        *History
 	selectedItem   *item
+	allItems	   []*item
+	allVisibleItems[]*item
 	highlights     map[*item]highlights
 	groupedItemMap map[string][]*item
 	groupedItems	[]*item
@@ -49,12 +49,37 @@ func (l *list)switchMode() {
 	} else {
 		l.model.mode = grouped
 		groupedItems := l.model.groupedItems
-		l.model.history.allVisibleItems = groupedItems
-		sort.Slice(groupedItems,
-			func(i, j int) bool {
-				return len(l.model.groupedItemMap[groupedItems[i].cmdexpr]) > len(l.model.groupedItemMap[groupedItems[j].cmdexpr])
-			},
-		)
+		l.model.allVisibleItems = groupedItems
+	}
+	l.model.sort()
+}
+
+func (m *listModel) sort() {
+	var sortFunc func(i, j int) bool
+	if m.mode == grouped {
+		sortFunc = m.sortGrouped()
+	} else {
+		sortFunc = m.sortInDateOrder()
+	}
+	sort.Slice(m.allVisibleItems, sortFunc)
+	//sort.Slice(m.allVisibleItems, m.sortByHighglights())
+}
+
+func (m *listModel) sortGrouped() func(i, j int) bool {
+	return func(i, j int) bool {
+		return len(m.groupedItemMap[m.groupedItems[i].cmdexpr]) > len(m.groupedItemMap[m.groupedItems[j].cmdexpr])
+	}
+}
+
+func (m *listModel) sortInDateOrder() func (i, j int) bool {
+	return func(i, j int) bool {
+		return m.allItems[i].timestamp.After(m.groupedItems[j].timestamp)
+	}
+}
+
+func (m *listModel) sortByHighglights() func (i, j int) bool {
+	return func(i, j int) bool {
+		return m.highlights[m.allItems[i]].matches < m.highlights[m.allItems[j]].matches
 	}
 }
 
@@ -70,13 +95,27 @@ func (m *listModel) loadHistory() *listModel {
 	return m
 }
 
+func (m *listModel) createItems() {
+	for i := len(m.history.lines) - 1; i >= 0; i-- {
+		v := m.history.lines[i]
+		if !validHistLine(v) {
+			continue
+		}
+		i := newItem(v, m.history.fmt)
+		m.allItems = append(m.allItems, i)
+	}
+	m.allVisibleItems = m.allItems
+	m.endx = 60
+	m.endy = len(m.allItems)
+}
+
 func (m *listModel) GetBounds() (int, int) {
-	return m.endx, len(m.history.allVisibleItems)
+	return m.endx, len(m.allVisibleItems)
 }
 
 func (m *listModel) MoveCursor(offx, offy int) {
-	if m.y+offy >= len(m.history.allVisibleItems) {
-		m.y = len(m.history.allVisibleItems) - 1
+	if m.y+offy >= len(m.allVisibleItems) {
+		m.y = len(m.allVisibleItems) - 1
 	} else if m.y+offy < 0 {
 		m.y = 0
 	} else {
@@ -95,7 +134,7 @@ func (m *listModel) SetCursor(x int, y int) {
 func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 	style := tcell.StyleDefault
 
-	if y >= len(m.history.allVisibleItems) {
+	if y >= len(m.allVisibleItems) {
 		return ' ', style, nil, 1
 	}
 
@@ -107,16 +146,17 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 
 	if y == m.y {
 		style = style.Background(tcell.ColorOldLace).Foreground(tcell.ColorBlack).Bold(true)
-		m.selectedItem = m.history.allVisibleItems[y]
+		m.selectedItem = m.allVisibleItems[y]
 	}
 
 	selectedMode := m.mode
 	leftMargin := 29
-	text := m.history.allVisibleItems[y].formatted
+	text := m.allVisibleItems[y].formatted
 
 	if selectedMode == grouped {
-		text = m.history.allVisibleItems[y].grouped
+		text = m.allVisibleItems[y].grouped
 	}
+
 
 	if x < leftMargin {
 		style = style.Foreground(tcell.ColorRed)
@@ -126,7 +166,7 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 	if x >= len(text) {
 		ch = ' '
 	} else {
-		i := m.history.allVisibleItems[y]
+		i := m.allVisibleItems[y]
 
 		ch = rune(text[x])
 		if m.highlights[i].spans != nil {

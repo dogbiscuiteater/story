@@ -7,8 +7,8 @@ import (
 
 // Collector gathers together identical lines
 func (l *list) collect(){
-	cmdExprs := make(map[string]bool, len(l.model.history.allItems))
-	for _, i := range l.model.history.allItems {
+	cmdExprs := make(map[string]bool, len(l.model.allItems))
+	for _, i := range l.model.allItems {
 		if cmdExprs[i.cmdexpr] {
 			l.model.groupedItemMap[i.cmdexpr] = append(l.model.groupedItemMap[i.cmdexpr], i)
 		} else {
@@ -18,7 +18,7 @@ func (l *list) collect(){
 		}
 	}
 
-	for _, i := range l.model.history.allItems {
+	for _, i := range l.model.allItems {
 		count := "(" + strconv.Itoa(len(l.model.groupedItemMap[i.cmdexpr])) + ")"
 		padding := strings.Repeat(" ", 29-len(count))
 		i.grouped =  count + padding + " : " + i.cmdexpr

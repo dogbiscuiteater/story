@@ -8,12 +8,12 @@ import (
 
 // Item is specifically an entry in a shell history.
 type item struct {
+
 	timestamp time.Time
 	fmt       *HistoryFormat
 	entry     string
 	formatted string
 	grouped	  string
-	runes     []rune
 	cmdexpr   string
 	cmd       string
 	cmdArgs   string
@@ -48,6 +48,5 @@ func (i *item) split() {
 		i.cmdArgs = strings.TrimSpace(strings.TrimPrefix(i.cmdexpr, i.cmd))
 	}
 	i.formatted = i.timestamp.String() + " : " + i.cmdexpr
-	i.runes = []rune(i.formatted)
 	i.words = strings.Split(i.cmdArgs, " ")
 }

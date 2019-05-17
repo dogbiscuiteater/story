@@ -100,13 +100,14 @@ func NewViewer() *viewer {
 
 	history := NewHistory()
 	listModel := &listModel{
-		history: history, endx: 60, endy: len(history.allVisibleItems),
+		history: history,
 		groupedItemMap: make(map[string][]*item, 0),
 	}
+	listModel.createItems()
+
 	l := &list{
 		view: views.NewCellView(),
 	}
-
 	l.SetContent(l.view)
 	l.model = listModel
 	l.view.SetModel(listModel)

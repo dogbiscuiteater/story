@@ -3,7 +3,6 @@ package gistviewer
 import (
 	"github.com/gdamore/tcell"
 	"regexp"
-	"sort"
 	"strings"
 )
 
@@ -12,33 +11,39 @@ type highlights struct {
 	matches int
 }
 
-func (m *list) filter(searchTerms []string) {
+func (l *list) filter(searchTerms []string) {
 
 	// Create a mapping of Item to text span
 	spans := make(map[*item][][]int, 0)
 	h := make(map[*item]highlights, 0)
 
-	m.model.highlights = h
+	l.model.highlights = h
 
 	// Nudge the view port to reveal the top line. TODO: find out why the top line gets hidden.
-	m.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
+	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
+
+	if l.model.mode == grouped {
+		l.model.allVisibleItems = l.model.groupedItems
+	} else {
+		l.model.allVisibleItems = l.model.allItems
+	}
 
 	// If the search string is blank then show all of the items.
 	if len(searchTerms) == 0 {
-		m.model.history.allVisibleItems = m.model.history.allItems
 		return
 	}
 
-	//
+	// Prepare to reset the visible items list
 	v := make([]*item, 0)
 	matches := make(map[*item]int)
 	var item *item
 
-	for _, item = range m.model.history.allItems {
+	// For each item, check to see if its command expression contains any search term and highlight the first 10
+	// occurrences.
+	for _, item = range l.model.allVisibleItems {
 		for _, searchTerm := range searchTerms {
 			if strings.Contains(item.formatted, searchTerm) {
 				matches[item]++
-
 				re := regexp.MustCompile(regexp.QuoteMeta(searchTerm))
 
 				for _, indices := range re.FindAllStringIndex(item.formatted, 10) {
@@ -48,7 +53,6 @@ func (m *list) filter(searchTerms []string) {
 		}
 
 		if matches[item] == 0 { continue }
-
 		v = append(v, item)
 		h[item] = highlights{
 			spans:   spans[item],
@@ -56,18 +60,13 @@ func (m *list) filter(searchTerms []string) {
 		}
 	}
 
-	sort.Slice(v, func(i,j int)bool {
-		return h[v[i]].matches > h[v[j]].matches
-	})
+	l.model.allVisibleItems = v
 
-	//sort.Slice(v, func(i,j int) bool { v[i]. }())
-	m.model.history.allVisibleItems = v
-
-	if len(m.model.history.allVisibleItems) > 0 {
-		m.model.selectedItem = m.model.history.allVisibleItems[0]
+	if len(l.model.allVisibleItems) > 0 {
+		l.model.selectedItem = l.model.allVisibleItems[0]
 	}
 
-	m.model.endy = len(m.model.history.allVisibleItems) - 1
-	m.model.y = 0
+	l.model.endy = len(l.model.allVisibleItems) - 1
+	l.model.y = 0
 }
 

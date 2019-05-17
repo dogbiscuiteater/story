@@ -9,28 +9,26 @@ import (
 
 
 type History struct {
-	allItems        []*item
 	wordsToItems    map[string][]*item
-	allVisibleItems []*item
 	lines           []string
 	fmt             *HistoryFormat
-
-	aliases aliases
 }
 
 type aliases map[string]string
 
-//HistoryFormat is the currently selected format of a history Item
+// HistoryFormat is the currently selected format of a history Item
 type HistoryFormat struct {
 	timestamp string
 	entry     string
 	cmd       string
 }
 
-func newHistoryFormat(timestamp, entry, expr string) *HistoryFormat {
+//
+func newHistoryFormat(timestamp, entry string) *HistoryFormat {
 	f := &HistoryFormat{
 		timestamp: timestamp,
 		entry:     entry,
+
 	}
 	return f
 }
@@ -49,7 +47,7 @@ func NewHistory() *History {
 	historyFileContents, _ := ioutil.ReadFile(histfileName)
 
 	h := &History{
-		fmt:      newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "", ""),
+		fmt:      newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "" ),
 	}
 
 	lines := strings.Split(string(historyFileContents), "\n")
@@ -60,20 +58,7 @@ func NewHistory() *History {
 		}
 	}
 	h.lines = nonEmptyLines
-	h.createItems()
 	return h
-}
-
-func (h *History) createItems() {
-	for i := len(h.lines) - 1; i >= 0; i-- {
-		v := h.lines[i]
-		if !validHistLine(v) {
-			continue
-		}
-		i := newItem(v, h.fmt)
-		h.allItems = append(h.allItems, i)
-	}
-	h.allVisibleItems = h.allItems
 }
 
 func validHistLine(l string) bool {
