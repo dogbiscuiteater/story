@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Item is specifically an entry in a shell history.
+// Item is an entry in a shell history. It contains the timestamp, command expression, search terms and highlighted terms
 type item struct {
 
 	timestamp time.Time
@@ -18,6 +18,7 @@ type item struct {
 	cmd       string
 	cmdArgs   string
 	words     []string
+	highlights []highlights
 }
 
 func newItem(entry string, fmt *HistoryFormat) *item {

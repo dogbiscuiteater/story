@@ -6,7 +6,6 @@ import (
 	"sort"
 )
 
-
 type mode int
 
 const (
@@ -25,15 +24,13 @@ func (l *list) HandleEvent(ev tcell.Event) bool {
 }
 
 type listModel struct {
-
-	history        *History
-	selectedItem   *item
-	allItems	   []*item
-	allVisibleItems[]*item
-	highlights     map[*item]highlights
-	groupedItemMap map[string][]*item
-	groupedItems	[]*item
-	mode mode
+	history         *History
+	selectedItem    *item
+	allItems        []*item
+	allVisibleItems []*item
+	groupedItemMap  map[string][]*item
+	groupedItems    []*item
+	mode            mode
 
 	x    int
 	y    int
@@ -41,7 +38,7 @@ type listModel struct {
 	endy int
 }
 
-func (l *list)switchMode() {
+func (l *list) switchMode() {
 	m := l.model.mode
 	if m == grouped {
 		l.model.mode = dateOrder
@@ -50,7 +47,7 @@ func (l *list)switchMode() {
 		l.model.mode = grouped
 		l.model.allVisibleItems = l.model.groupedItems
 	}
-	l.model.endy = len(l.model.allVisibleItems)-1
+	l.model.endy = len(l.model.allVisibleItems) - 1
 	l.model.sort()
 	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
 }
@@ -67,29 +64,23 @@ func (m *listModel) sort() {
 
 func (m *listModel) sortGrouped() func(i, j int) bool {
 	return func(i, j int) bool {
-		a := m.groupedItemMap[m.groupedItems[i].cmdexpr]
-		b := m.groupedItemMap[m.groupedItems[j].cmdexpr]
-		if m.highlights[a[0]].matches == m.highlights[b[0]].matches {
-			return len(m.groupedItemMap[m.groupedItems[i].cmdexpr]) > len(m.groupedItemMap[m.groupedItems[j].cmdexpr])
+		a := m.allVisibleItems[i]
+		b := m.allVisibleItems[j]
+		if len(a.highlights) == len (b.highlights) {
+			return len(m.groupedItemMap[a.cmdexpr]) > len(m.groupedItemMap[b.cmdexpr])
 		}
-		return m.highlights[a[0]].matches > m.highlights[b[0]].matches
+		return len(a.highlights) > len (b.highlights)
 	}
 }
 
-func (m *listModel) sortInDateOrder() func (i, j int) bool {
+func (m *listModel) sortInDateOrder() func(i, j int) bool {
 	return func(i, j int) bool {
-		a := m.allItems[i]
-		b := m.allItems[j]
-		if m.highlights[a].matches == m.highlights[b].matches {
-			return m.allItems[i].timestamp.After(m.allItems[j].timestamp)
+		a := m.allVisibleItems[i]
+		b := m.allVisibleItems[j]
+		if len(a.highlights) == len (b.highlights) {
+			return a.timestamp.After(b.timestamp)
 		}
-		return m.highlights[a].matches > m.highlights[b].matches
-	}
-}
-
-func (m *listModel) sortByHighglights() func (i, j int) bool {
-	return func(i, j int) bool {
-		return m.highlights[m.allVisibleItems[i]].matches > m.highlights[m.allVisibleItems[j]].matches
+		return len(a.highlights) > len (b.highlights)
 	}
 }
 
@@ -161,29 +152,33 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 
 	selectedMode := m.mode
 	leftMargin := 29
-	text := m.allVisibleItems[y].formatted
 
+	// Get hold of the visible text in the item
+	text := m.allVisibleItems[y].formatted
 	if selectedMode == grouped {
 		text = m.allVisibleItems[y].grouped
 	}
 
-
+	// The rune is inside the left margin (1st 29 chars?!) so it is colored differently
 	if x < leftMargin {
 		style = style.Foreground(tcell.ColorRed)
 	}
 
-
+	// The rune may be r.padding
 	if x >= len(text) {
 		ch = ' '
 	} else {
-		i := m.allVisibleItems[y]
-
+		item := m.allVisibleItems[y]
 		ch = rune(text[x])
-		if m.highlights[i].spans != nil {
-			for _, h := range m.highlights[i].spans{
-				if x >= h[0] && x < h[1]  {
-					style = style.Background(tcell.ColorOrange).Foreground(tcell.ColorBlack).Bold(true)
-					break
+
+		// If this character is part of a highlighted term, then use the highlighting style for it.
+		if item.highlights != nil {
+			for _, h := range item.highlights {
+				for i := 0; i < len(h.indexes); i += 2 {
+					if x >= h.indexes[i] && x < h.indexes[i+1] {
+						style = style.Background(tcell.ColorOrange).Foreground(tcell.ColorBlack).Bold(true)
+						break
+					}
 				}
 			}
 		}

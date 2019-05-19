@@ -7,17 +7,11 @@ import (
 )
 
 type highlights struct {
-	spans [][]int
-	matches int
+	term string
+	indexes []int
 }
 
 func (l *list) filter(searchTerms []string) {
-
-	// Create a mapping of Item to text span
-	spans := make(map[*item][][]int, 0)
-	h := make(map[*item]highlights, 0)
-
-	l.model.highlights = h
 
 	// Nudge the view port to reveal the top line. TODO: find out why the top line gets hidden.
 	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
@@ -30,6 +24,9 @@ func (l *list) filter(searchTerms []string) {
 
 	// If the search string is blank then show all of the items.
 	if len(searchTerms) == 0 {
+		for _, item := range l.model.allItems {
+			item.highlights = make([]highlights, 0)
+		}
 		return
 	}
 
@@ -41,33 +38,27 @@ func (l *list) filter(searchTerms []string) {
 	// For each item, check to see if its command expression contains any search term and highlight the first 10
 	// occurrences.
 	for _, item = range l.model.allVisibleItems {
+		item.highlights = make([]highlights, 0)
 		for _, searchTerm := range searchTerms {
+			searchTerm = strings.TrimSpace(searchTerm)
 			if strings.Contains(item.formatted, searchTerm) {
 				matches[item]++
 				re := regexp.MustCompile(regexp.QuoteMeta(searchTerm))
 
 				for _, indices := range re.FindAllStringIndex(item.formatted, 10) {
-					spans[item] = append(spans[item], indices)
+					item.highlights = append(item.highlights, highlights{ searchTerm, indices })
 				}
 			}
 		}
 
 		if matches[item] == 0 { continue }
 		v = append(v, item)
-		h[item] = highlights{
-			spans:   spans[item],
-			matches: matches[item],
-		}
 	}
 
 	l.model.allVisibleItems = v
 
-	if len(l.model.allVisibleItems) > 0 {
-		l.model.selectedItem = l.model.allVisibleItems[0]
-	}
-
 	l.model.endy = len(l.model.allVisibleItems) - 1
-	l.model.y = 0
 	l.model.sort()
+	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
 }
 
