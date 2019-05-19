@@ -11,13 +11,11 @@ var app *views.Application
 type viewer struct {
 	input *input
 	list  *list
-
 	status *views.SimpleStyledTextBar
-
 	model *listModel
-	views.Panel
-
 	Selection string
+
+	views.Panel
 }
 
 func (v *viewer) HandleEvent(e tcell.Event) bool {
@@ -61,7 +59,8 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 
 		if (ev.Key() == tcell.KeyCtrlG) {
 			v.list.switchMode()
-
+			v.list.model.selectedItem = v.list.model.allVisibleItems[0]
+			//v.list.s//
 
 			// TODO Switch between grouped (with count) and ungrouped (with date) for formatted item string
 			//groupedItemMap := v.list.model.groupedItemMap

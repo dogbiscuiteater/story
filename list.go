@@ -50,11 +50,12 @@ func (l *list)switchMode() {
 		l.model.mode = grouped
 		l.model.allVisibleItems = l.model.groupedItems
 	}
+	l.model.endy = len(l.model.allVisibleItems)-1
 	l.model.sort()
+	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
 }
 
 func (m *listModel) sort() {
-	sort.Slice(m.allVisibleItems, m.sortByHighglights())
 	var sortFunc func(i, j int) bool
 	if m.mode == grouped {
 		sortFunc = m.sortGrouped()

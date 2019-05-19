@@ -68,5 +68,6 @@ func (l *list) filter(searchTerms []string) {
 
 	l.model.endy = len(l.model.allVisibleItems) - 1
 	l.model.y = 0
+	l.model.sort()
 }
 
