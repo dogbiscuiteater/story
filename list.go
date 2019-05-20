@@ -4,6 +4,9 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"sort"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type mode int
@@ -19,6 +22,7 @@ type list struct {
 	views.Panel
 }
 
+//HandleEvent delegates to the Panel view
 func (l *list) HandleEvent(ev tcell.Event) bool {
 	return l.view.HandleEvent(ev)
 }
@@ -28,6 +32,7 @@ type listModel struct {
 	selectedItem    *item
 	allItems        []*item
 	allVisibleItems []*item
+
 	groupedItemMap  map[string][]*item
 	groupedItems    []*item
 	mode            mode
@@ -39,17 +44,21 @@ type listModel struct {
 }
 
 func (l *list) switchMode() {
-	m := l.model.mode
-	if m == grouped {
-		l.model.mode = dateOrder
-		l.model.allVisibleItems = l.model.allItems
-	} else {
-		l.model.mode = grouped
-		l.model.allVisibleItems = l.model.groupedItems
-	}
-	l.model.endy = len(l.model.allVisibleItems) - 1
-	l.model.sort()
+	l.model.update()
 	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
+}
+
+func (m *listModel) update() {
+	if m.mode == grouped {
+		m.mode = dateOrder
+		m.allVisibleItems = m.allItems
+	} else {
+		m.mode = grouped
+		m.allVisibleItems = m.groupedItems
+	}
+
+	m.endy = len(m.allVisibleItems) - 1
+	m.sort()
 }
 
 func (m *listModel) sort() {
@@ -60,16 +69,24 @@ func (m *listModel) sort() {
 		sortFunc = m.sortInDateOrder()
 	}
 	sort.Slice(m.allVisibleItems, sortFunc)
+	if len(m.allVisibleItems) == 0 || len(m.allVisibleItems[0].highlights) == 0 { return }
+
+	for i, item := range m.allVisibleItems {
+		if len(item.highlights) ==  0 {
+			m.allVisibleItems = m.allVisibleItems[0:i]
+			break;
+		}
+	}
 }
 
 func (m *listModel) sortGrouped() func(i, j int) bool {
 	return func(i, j int) bool {
 		a := m.allVisibleItems[i]
 		b := m.allVisibleItems[j]
-		if len(a.highlights) == len (b.highlights) {
+		if  a.rank() == b.rank() {
 			return len(m.groupedItemMap[a.cmdexpr]) > len(m.groupedItemMap[b.cmdexpr])
 		}
-		return len(a.highlights) > len (b.highlights)
+		return a.rank() > b.rank()
 	}
 }
 
@@ -77,10 +94,10 @@ func (m *listModel) sortInDateOrder() func(i, j int) bool {
 	return func(i, j int) bool {
 		a := m.allVisibleItems[i]
 		b := m.allVisibleItems[j]
-		if len(a.highlights) == len (b.highlights) {
+		if  a.rank() == b.rank() {
 			return a.timestamp.After(b.timestamp)
 		}
-		return len(a.highlights) > len (b.highlights)
+		return a.rank() > b.rank()
 	}
 }
 
@@ -99,11 +116,11 @@ func (m *listModel) loadHistory() *listModel {
 func (m *listModel) createItems() {
 	for i := len(m.history.lines) - 1; i >= 0; i-- {
 		v := m.history.lines[i]
-		if !validHistLine(v) {
+		if !validHistoryLine(v) {
 			continue
 		}
-		i := newItem(v, m.history.fmt)
-		m.allItems = append(m.allItems, i)
+		item := newItem(v, m.history.fmt)
+		m.allItems = append(m.allItems, item)
 	}
 	m.allVisibleItems = m.allItems
 	m.endx = 60
@@ -184,4 +201,80 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		}
 	}
 	return ch, style, nil, 1
+}
+
+// collect gathers together identical lines
+func (l *list) collect() {
+	cmdExprs := make(map[string]bool, len(l.model.allItems))
+	for _, i := range l.model.allItems {
+		if cmdExprs[i.cmdexpr] {
+			l.model.groupedItemMap[i.cmdexpr] = append(l.model.groupedItemMap[i.cmdexpr], i)
+		} else {
+			l.model.groupedItemMap[i.cmdexpr] = []*item{i}
+			l.model.groupedItems = append(l.model.groupedItems, i)
+			cmdExprs[i.cmdexpr] = true
+		}
+	}
+
+	for _, i := range l.model.allItems {
+		count := "(" + strconv.Itoa(len(l.model.groupedItemMap[i.cmdexpr])) + ")"
+		padding := strings.Repeat(" ", 29-len(count))
+		i.grouped = count + padding + " : " + i.cmdexpr
+	}
+}
+
+// Item is an entry in a shell history. It contains the timestamp, command expression, search terms and highlighted terms
+type item struct {
+
+	timestamp time.Time
+	fmt       *HistoryFormat
+	entry     string
+	formatted string
+	grouped	  string
+	cmdexpr   string
+	cmd       string
+	cmdArgs   string
+	words     []string
+	highlights []highlights
+}
+
+func newItem(entry string, fmt *HistoryFormat) *item {
+	h := &item{
+		entry: entry,
+		fmt:   fmt,
+	}
+	h.split()
+	return h
+}
+
+func (i *item) split() {
+	elements := strings.Split(i.entry, ";")
+
+	// Get the timestamp element
+	s := strings.Split(elements[0], ":")
+	if len(s) > 1 {
+		t, _ := strconv.ParseInt(strings.TrimSpace(s[1]), 10, 64)
+		i.timestamp = time.Unix(t, 0)
+	}
+
+	// Get the command element
+	if len(elements) == 1 {
+		i.cmdexpr = ""
+	} else {
+		i.cmdexpr = elements[1]
+		i.cmd = strings.TrimSpace(strings.Split(i.cmdexpr, " ")[0])
+		i.cmdArgs = strings.TrimSpace(strings.TrimPrefix(i.cmdexpr, i.cmd))
+	}
+	i.formatted = i.timestamp.String() + " : " + i.cmdexpr
+	i.words = strings.Split(i.cmdArgs, " ")
+}
+
+func (i *item) rank() int {
+	rank := len(i.highlights) * 10
+	for _, h := range i.highlights {
+		l := len(h.indexes) / 2
+		if l > 9 { l = 9}
+		rank += l
+	}
+	return rank
 }

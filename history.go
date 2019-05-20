@@ -9,12 +9,9 @@ import (
 
 
 type History struct {
-	wordsToItems    map[string][]*item
 	lines           []string
 	fmt             *HistoryFormat
 }
-
-type aliases map[string]string
 
 // HistoryFormat is the currently selected format of a history Item
 type HistoryFormat struct {
@@ -61,7 +58,7 @@ func NewHistory() *History {
 	return h
 }
 
-func validHistLine(l string) bool {
+func validHistoryLine(l string) bool {
 	if len(l) <= 1 || strings.IndexRune(l, ':') != 0 {
 		return false
 	}
