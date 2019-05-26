@@ -1,4 +1,4 @@
-module gistviewer
+module gist
 
 go 1.11
 

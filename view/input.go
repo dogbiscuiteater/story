@@ -1,4 +1,4 @@
-package gistviewer
+package view
 
 import (
 	"github.com/gdamore/tcell"

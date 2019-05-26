@@ -1,6 +1,7 @@
-package gistviewer
+package view
 
 import (
+	"gist/history"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"sort"
@@ -28,7 +29,7 @@ func (l *list) HandleEvent(ev tcell.Event) bool {
 }
 
 type listModel struct {
-	history         *History
+	history         *history.History
 	selectedItem    *item
 	allItems        []*item
 	allVisibleItems []*item
@@ -104,7 +105,7 @@ func (m *listModel) sortInDateOrder() func(i, j int) bool {
 func (m *listModel) loadHistory() *listModel {
 	done := make(chan bool, 1)
 	go func(chan bool) {
-		h := NewHistory()
+		h := history.NewHistory()
 		done <- true
 		m.history = h
 	}(done)
@@ -114,12 +115,9 @@ func (m *listModel) loadHistory() *listModel {
 }
 
 func (m *listModel) createItems() {
-	for i := len(m.history.lines) - 1; i >= 0; i-- {
-		v := m.history.lines[i]
-		if !validHistoryLine(v) {
-			continue
-		}
-		item := newItem(v, m.history.fmt)
+	for i := len(m.history.Lines()) - 1; i >= 0; i-- {
+		v := m.history.Lines()[i]
+		item := newItem(v, m.history.Fmt)
 		m.allItems = append(m.allItems, item)
 	}
 	m.allVisibleItems = m.allItems
@@ -227,7 +225,7 @@ func (l *list) collect() {
 type item struct {
 
 	timestamp time.Time
-	fmt       *HistoryFormat
+	fmt       *history.HistoryFormat
 	entry     string
 	formatted string
 	grouped	  string
@@ -238,7 +236,7 @@ type item struct {
 	highlights []highlights
 }
 
-func newItem(entry string, fmt *HistoryFormat) *item {
+func newItem(entry string, fmt *history.HistoryFormat) *item {
 	h := &item{
 		entry: entry,
 		fmt:   fmt,

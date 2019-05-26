@@ -1,6 +1,8 @@
-package gistviewer
+package history
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestNewHistory(t *testing.T) {
 	NewHistory()

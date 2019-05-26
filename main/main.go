@@ -13,11 +13,11 @@ package main
 import "C"
 
 import (
-	"gistviewer"
+	"gist/view"
 )
 
 func main() {
-	v := gistviewer.NewViewer()
+	v := view.NewViewer()
 	writeSelectionToPrompt(v.Selection)
 }
 

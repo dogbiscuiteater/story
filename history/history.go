@@ -1,4 +1,4 @@
-package gistviewer
+package history
 
 import (
 	"github.com/spf13/viper"
@@ -9,8 +9,8 @@ import (
 
 
 type History struct {
-	lines           []string
-	fmt             *HistoryFormat
+	lines []string
+	Fmt   *HistoryFormat
 }
 
 // HistoryFormat is the currently selected format of a history Item
@@ -30,6 +30,9 @@ func newHistoryFormat(timestamp, entry string) *HistoryFormat {
 	return f
 }
 
+func (h *History) Lines() []string{
+	return h.lines
+}
 
 func NewHistory() *History {
 	viper.AutomaticEnv()
@@ -44,7 +47,7 @@ func NewHistory() *History {
 	historyFileContents, _ := ioutil.ReadFile(histfileName)
 
 	h := &History{
-		fmt:      newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "" ),
+		Fmt: newHistoryFormat("DD/MM/YYYY:hh:mm:ss", "" ),
 	}
 
 	lines := strings.Split(string(historyFileContents), "\n")

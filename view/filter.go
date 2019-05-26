@@ -1,4 +1,4 @@
-package gistviewer
+package view
 
 import (
 	"github.com/gdamore/tcell"
@@ -14,7 +14,7 @@ type highlights struct {
 func (l *list) filter(searchTerms []string) {
 
 	// Nudge the view port to reveal the top line. TODO: find out why the top line gets hidden.
-	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
+	//l.view.HandleEvent(tcell.NewEventKey(tcell.KeyUp, ' ', 0))
 
 	if l.model.mode == grouped {
 		l.model.allVisibleItems = l.model.groupedItems
@@ -55,8 +55,8 @@ func (l *list) filter(searchTerms []string) {
 		v = append(v, item)
 	}
 
+	// Reduce the visible items to just the highlighted items if there are any.
 	l.model.allVisibleItems = v
-
 	l.model.endy = len(l.model.allVisibleItems) - 1
 	l.model.sort()
 	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))

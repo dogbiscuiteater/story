@@ -1,6 +1,7 @@
-package gistviewer
+package view
 
 import (
+	"gist/history"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"os"
@@ -97,7 +98,7 @@ func NewViewer() *viewer {
 	i.view.SetModel(inputModel)
 	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
-	history := NewHistory()
+	history := history.NewHistory()
 	listModel := &listModel{
 		history: history,
 		groupedItemMap: make(map[string][]*item, 0),
