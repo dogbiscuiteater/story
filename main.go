@@ -1,4 +1,4 @@
-package gist
+package main
 
 // #include <sys/ioctl.h>
 // #include <string.h>
