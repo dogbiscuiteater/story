@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-
 type History struct {
 	lines []string
 	Fmt   *HistoryFormat
