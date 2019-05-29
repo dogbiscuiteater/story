@@ -1,7 +1,7 @@
-package view
+package gist
 
 import (
-	"gist/history"
+	"github.com/dogbiscuiteater/squeaky-shrimp/history"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 	"os"

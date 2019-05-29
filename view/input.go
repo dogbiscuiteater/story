@@ -1,4 +1,4 @@
-package view
+package gist
 
 import (
 	"github.com/gdamore/tcell"

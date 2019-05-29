@@ -1,4 +1,4 @@
-package history
+package gist
 
 import (
 	"github.com/spf13/viper"
