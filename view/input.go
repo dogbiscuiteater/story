@@ -20,18 +20,22 @@ type inputModel struct {
 }
 
 func (m *inputModel) appendRune(r rune) {
-	m.line += string(r)
+	if m.cursor == len(m.line){
+		m.line += string(r)
+	} else {
+		m.line = m.line[0:m.cursor] + string(r) + m.line[m.cursor:len(m.line)]
+	}
 	m.updateTerms()
-	m.cursor = len(m.line)
+	m.cursor++
 }
 
 func (m *inputModel) deleteRune() {
 	if m.cursor == 0 || len(m.line) == 0 {
 		return
 	}
-	m.line = m.line[:len(m.line)-1]
+	m.cursor--
+	m.line = m.line[0:m.cursor] + m.line[m.cursor+1:len(m.line)]
 	m.updateTerms()
-	m.cursor = len(m.line)
 }
 
 func (m *inputModel) updateTerms() {

@@ -45,6 +45,22 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 			return true
 		}
 
+		if ev.Key() == tcell.KeyLeft {
+			c, _,_,_ := v.input.model.GetCursor()
+			if c == 0 { return true }
+			c--
+			v.input.model.SetCursor(c, 0)
+			return true
+		}
+
+		if ev.Key() == tcell.KeyRight {
+			c, _,_,_ := v.input.model.GetCursor()
+			if c == len(v.input.line()) { return true }
+			c++
+			v.input.model.SetCursor(c, 0)
+			return true
+		}
+
 		if ev.Key() == tcell.KeyRune {
 			v.list.view.SetCursor(0, 0)
 			v.addRuneToSearch(ev.Rune())
