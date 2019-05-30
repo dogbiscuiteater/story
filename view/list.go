@@ -1,20 +1,20 @@
-package lowdown
+package story
 
 import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-	lowdown "lowdown/history"
+	story "story/history"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
 
-type mode int
+type mode string
 
 const (
-	dateOrder mode = iota
-	grouped
+	dateOrder      mode = "date"
+	frequencyOrder      = "frequency"
 )
 
 type list struct {
@@ -29,7 +29,7 @@ func (l *list) HandleEvent(ev tcell.Event) bool {
 }
 
 type listModel struct {
-	history         *lowdown.History
+	history         *story.History
 	selectedItem    *item
 	allItems        []*item
 	allVisibleItems []*item
@@ -50,11 +50,11 @@ func (l *list) switchMode() {
 }
 
 func (m *listModel) update() {
-	if m.mode == grouped {
+	if m.mode == frequencyOrder {
 		m.mode = dateOrder
 		m.allVisibleItems = m.allItems
 	} else {
-		m.mode = grouped
+		m.mode = frequencyOrder
 		m.allVisibleItems = m.groupedItems
 	}
 
@@ -64,7 +64,7 @@ func (m *listModel) update() {
 
 func (m *listModel) sort() {
 	var sortFunc func(i, j int) bool
-	if m.mode == grouped {
+	if m.mode == frequencyOrder {
 		sortFunc = m.sortGrouped()
 	} else {
 		sortFunc = m.sortInDateOrder()
@@ -105,7 +105,7 @@ func (m *listModel) sortInDateOrder() func(i, j int) bool {
 func (m *listModel) loadHistory() *listModel {
 	done := make(chan bool, 1)
 	go func(chan bool) {
-		h := lowdown.NewHistory()
+		h := story.NewHistory()
 		done <- true
 		m.history = h
 	}(done)
@@ -170,7 +170,7 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 
 	// Get hold of the visible text in the item
 	text := m.allVisibleItems[y].formatted
-	if selectedMode == grouped {
+	if selectedMode == frequencyOrder {
 		text = m.allVisibleItems[y].grouped
 	}
 
@@ -217,15 +217,19 @@ func (l *list) collect() {
 	for _, i := range l.model.allItems {
 		count := "(" + strconv.Itoa(len(l.model.groupedItemMap[i.cmdexpr])) + ")"
 		padding := strings.Repeat(" ", 29-len(count))
-		i.grouped = count + padding + " : " + i.cmdexpr
+		i.grouped = padding + count + " : " + i.cmdexpr
 	}
+}
+
+func (l *list) mode() mode {
+	return l.model.mode
 }
 
 // Item is an entry in a shell history. It contains the timestamp, command expression, search terms and highlighted terms
 type item struct {
 
 	timestamp time.Time
-	fmt       *lowdown.HistoryFormat
+	fmt       *story.HistoryFormat
 	entry     string
 	formatted string
 	grouped	  string
@@ -236,7 +240,7 @@ type item struct {
 	highlights []highlights
 }
 
-func newItem(entry string, fmt *lowdown.HistoryFormat) *item {
+func newItem(entry string, fmt *story.HistoryFormat) *item {
 	h := &item{
 		entry: entry,
 		fmt:   fmt,

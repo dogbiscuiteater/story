@@ -1,9 +1,9 @@
-package lowdown
+package story
 
 import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-	lowdown "lowdown/history"
+	story "story/history"
 	"os"
 )
 
@@ -74,9 +74,10 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 			return true
 		}
 
-		if (ev.Key() == tcell.KeyCtrlG) {
+		if ev.Key() == tcell.KeyCtrlG {
 			v.list.switchMode()
 			v.list.model.selectedItem = v.list.model.allVisibleItems[0]
+			v.status.SetLeft("Order by: " + string(v.list.mode()))
 			app.Update()
 			return true
 		}
@@ -106,17 +107,17 @@ func NewViewer() *viewer {
 	i.view.SetModel(inputModel)
 	i.view.SetStyle(tcell.StyleDefault.Background(tcell.ColorNavy))
 
-	history := lowdown.NewHistory()
+	history := story.NewHistory()
 	listModel := &listModel{
 		history: history,
 		groupedItemMap: make(map[string][]*item, 0),
+		mode:dateOrder,
 	}
 	listModel.createItems()
 
 	l := &list{
 		view: views.NewCellView(),
 	}
-	l.SetContent(l.view)
 	l.model = listModel
 	l.view.SetModel(listModel)
 	l.collect()
@@ -124,15 +125,31 @@ func NewViewer() *viewer {
 	v.input = i
 	v.list = l
 	v.SetOrientation(views.Vertical)
-	v.AddWidget(i.view, 0.01)
-	v.AddWidget(l, 0.5)
 	v.model = listModel
 
-	v.status = views.NewSimpleStyledTextBar()
-	v.SetStatus(v.status)
+	title := views.NewTextBar()
+	title.SetStyle(tcell.StyleDefault.
+		Foreground(tcell.ColorWhite))
+	title.SetCenter("story : history viewer", tcell.StyleDefault)
+	title.SetRight("v.0.1", tcell.StyleDefault)
+
+	menu := views.NewText()
+	menu.SetText("toilet")
 
 	app = &views.Application{}
 	app.SetRootWidget(v)
+
+	status := views.NewSimpleStyledTextBar()
+	status.SetLeft("Order by: " + string(v.list.mode()))
+	v.status = status
+
+	p := views.NewBoxLayout(views.Vertical)
+	p.AddWidget(i.view, 0.01)
+	p.AddWidget(l.view, 0.5)
+	v.SetTitle(title)
+	v.SetMenu(menu)
+	v.SetContent(p)
+	v.SetStatus(status)
 
 	if e := app.Run(); e != nil {
 		println(e.Error())

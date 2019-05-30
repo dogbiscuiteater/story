@@ -1,4 +1,4 @@
-package lowdown
+package story
 
 import (
 	"testing"

@@ -14,11 +14,11 @@ package main
 import "C"
 
 import (
-	lowdown "lowdown/view"
+	story "story/view"
 )
 
 func main() {
-	v := lowdown.NewViewer()
+	v := story.NewViewer()
 	writeSelectionToPrompt(v.Selection)
 }
 
