@@ -13,7 +13,7 @@ type highlights struct {
 
 func (l *list) filter(searchTerms []string) {
 
-	if l.model.mode == frequencyOrder {
+	if l.model.mode == frequency {
 		l.model.allVisibleItems = l.model.groupedItems
 	} else {
 		l.model.allVisibleItems = l.model.allItems
@@ -56,6 +56,6 @@ func (l *list) filter(searchTerms []string) {
 	l.model.allVisibleItems = v
 	l.model.endy = len(l.model.allVisibleItems) - 1
 	l.model.sort()
-	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
+	l.cellView.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
 }
 

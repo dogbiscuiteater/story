@@ -3,8 +3,8 @@ package story
 import (
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-	story "story/history"
 	"os"
+	story "story/history"
 )
 
 var app *views.Application
@@ -15,7 +15,6 @@ type viewer struct {
 	status *views.SimpleStyledTextBar
 	model *listModel
 	Selection string
-
 	views.Panel
 }
 
@@ -62,7 +61,7 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 		}
 
 		if ev.Key() == tcell.KeyRune {
-			v.list.view.SetCursor(0, 0)
+			v.list.cellView.SetCursor(0, 0)
 			v.addRuneToSearch(ev.Rune())
 			app.Update()
 			return true
@@ -77,12 +76,21 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 		if ev.Key() == tcell.KeyCtrlG {
 			v.list.switchMode()
 			v.list.model.selectedItem = v.list.model.allVisibleItems[0]
-			v.status.SetLeft("Order by: " + string(v.list.mode()))
+			v.status.SetLeft("Order by: " + string(v.list.view()))
 			app.Update()
 			return true
 		}
 	}
 	return v.Panel.HandleEvent(e)
+}
+
+func (v *viewer) keybarText() string {
+	s := "%B[CTL-M]%N Change Mode %B[ESC]%N Exit"
+	return s
+}
+
+func (v *viewer) statusText() string{
+	return "Order by: " + string(v.list.view()) + "Showing "
 }
 
 func (v *viewer) addRuneToSearch(r rune) {
@@ -109,17 +117,17 @@ func NewViewer() *viewer {
 
 	history := story.NewHistory()
 	listModel := &listModel{
-		history: history,
+		history:        history,
 		groupedItemMap: make(map[string][]*item, 0),
-		mode:dateOrder,
+		mode:           date,
 	}
 	listModel.createItems()
 
 	l := &list{
-		view: views.NewCellView(),
+		cellView: views.NewCellView(),
 	}
 	l.model = listModel
-	l.view.SetModel(listModel)
+	l.cellView.SetModel(listModel)
 	l.collect()
 
 	v.input = i
@@ -127,25 +135,23 @@ func NewViewer() *viewer {
 	v.SetOrientation(views.Vertical)
 	v.model = listModel
 
-	title := views.NewTextBar()
-	title.SetStyle(tcell.StyleDefault.
-		Foreground(tcell.ColorWhite))
-	title.SetCenter("story : history viewer", tcell.StyleDefault)
-	title.SetRight("v.0.1", tcell.StyleDefault)
+	title := views.NewSimpleStyledTextBar()
+	title.SetCenter("story : history viewer")
+	title.SetRight("v.0.1")
 
-	menu := views.NewText()
-	menu.SetText("toilet")
+	menu := views.NewSimpleStyledText()
+	menu.SetMarkup(v.keybarText())
 
 	app = &views.Application{}
 	app.SetRootWidget(v)
 
 	status := views.NewSimpleStyledTextBar()
-	status.SetLeft("Order by: " + string(v.list.mode()))
+	status.SetLeft(v.statusText())
 	v.status = status
 
 	p := views.NewBoxLayout(views.Vertical)
 	p.AddWidget(i.view, 0.01)
-	p.AddWidget(l.view, 0.5)
+	p.AddWidget(l.cellView, 0.5)
 	v.SetTitle(title)
 	v.SetMenu(menu)
 	v.SetContent(p)
