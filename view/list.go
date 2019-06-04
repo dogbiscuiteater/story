@@ -42,7 +42,7 @@ type listModel struct {
 
 	groupedItemMap map[string][]*item
 	groupedItems   []*item
-	mode           view
+	view           view
 
 	x    int
 	y    int
@@ -56,11 +56,11 @@ func (l *list) switchMode() {
 }
 
 func (m *listModel) update() {
-	if m.mode == frequency {
-		m.mode = date
+	if m.view == frequency {
+		m.view = date
 		m.allVisibleItems = m.allItems
 	} else {
-		m.mode = frequency
+		m.view = frequency
 		m.allVisibleItems = m.groupedItems
 	}
 
@@ -70,7 +70,7 @@ func (m *listModel) update() {
 
 func (m *listModel) sort() {
 	var sortFunc func(i, j int) bool
-	if m.mode == frequency {
+	if m.view == frequency {
 		sortFunc = m.sortGrouped()
 	} else {
 		sortFunc = m.sortInDateOrder()
@@ -171,7 +171,7 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		m.selectedItem = m.allVisibleItems[y]
 	}
 
-	selectedMode := m.mode
+	selectedMode := m.view
 	leftMargin := 29
 
 	// Get hold of the visible text in the item
@@ -228,7 +228,7 @@ func (l *list) collect() {
 }
 
 func (l *list) view() view {
-	return l.model.mode
+	return l.model.view
 }
 
 // Item is an entry in a shell history. It contains the timestamp, command expression, search terms and highlighted terms

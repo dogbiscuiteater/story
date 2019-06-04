@@ -73,10 +73,10 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 			return true
 		}
 
-		if ev.Key() == tcell.KeyCtrlM {
+		if ev.Key() == tcell.KeyCtrlV {
 			v.list.switchMode()
 			v.list.model.selectedItem = v.list.model.allVisibleItems[0]
-			v.status.SetLeft("Order by: " + string(v.list.view()))
+			v.status.SetLeft("View : " + string(v.list.view()))
 			app.Update()
 			return true
 		}
@@ -85,7 +85,7 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 }
 
 func (v *viewer) keybarText() string {
-	s := "%B[CTL-M]%N Change Mode %B[ESC]%N Exit"
+	s := "%B[CTL-V]%N Change View %B[ESC]%N Exit"
 	return s
 }
 
@@ -119,7 +119,7 @@ func NewViewer() *viewer {
 	listModel := &listModel{
 		history:        history,
 		groupedItemMap: make(map[string][]*item, 0),
-		mode:           date,
+		view:           date,
 	}
 	listModel.createItems()
 

@@ -13,7 +13,7 @@ type highlights struct {
 
 func (l *list) filter(searchTerms []string) {
 
-	if l.model.mode == frequency {
+	if l.model.view == frequency {
 		l.model.allVisibleItems = l.model.groupedItems
 	} else {
 		l.model.allVisibleItems = l.model.allItems
