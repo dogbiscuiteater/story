@@ -24,6 +24,4 @@ Install story by running `go build` from the `cmd` directory.
 
 ### license
 
-
-
-License: Finally, include a section for the license of your project. For more information on choosing a license, check out GitHub’s licensing guide!
+story is licensed under [GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
