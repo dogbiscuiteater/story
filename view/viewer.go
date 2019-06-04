@@ -73,7 +73,7 @@ func (v *viewer) HandleEvent(e tcell.Event) bool {
 			return true
 		}
 
-		if ev.Key() == tcell.KeyCtrlG {
+		if ev.Key() == tcell.KeyCtrlM {
 			v.list.switchMode()
 			v.list.model.selectedItem = v.list.model.allVisibleItems[0]
 			v.status.SetLeft("Order by: " + string(v.list.view()))
