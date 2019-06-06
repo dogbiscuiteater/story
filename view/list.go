@@ -10,22 +10,28 @@ import (
 	"time"
 )
 
-type mode string
+type view string
+type order string
 
 const (
-	dateOrder      mode = "date"
-	frequencyOrder      = "frequency"
+	date      view = "date"
+	frequency      = "frequency"
+)
+
+const (
+	ascending order = "ascending"
+	descending 	    = "descending"
 )
 
 type list struct {
-	view  *views.CellView
-	model *listModel
+	cellView *views.CellView
+	model    *listModel
 	views.Panel
 }
 
-//HandleEvent delegates to the Panel view
+//HandleEvent delegates to the Panel cellView
 func (l *list) HandleEvent(ev tcell.Event) bool {
-	return l.view.HandleEvent(ev)
+	return l.cellView.HandleEvent(ev)
 }
 
 type listModel struct {
@@ -34,9 +40,9 @@ type listModel struct {
 	allItems        []*item
 	allVisibleItems []*item
 
-	groupedItemMap  map[string][]*item
-	groupedItems    []*item
-	mode            mode
+	groupedItemMap map[string][]*item
+	groupedItems   []*item
+	view           view
 
 	x    int
 	y    int
@@ -46,15 +52,15 @@ type listModel struct {
 
 func (l *list) switchMode() {
 	l.model.update()
-	l.view.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
+	l.cellView.HandleEvent(tcell.NewEventKey(tcell.KeyHome, ' ', 0))
 }
 
 func (m *listModel) update() {
-	if m.mode == frequencyOrder {
-		m.mode = dateOrder
+	if m.view == frequency {
+		m.view = date
 		m.allVisibleItems = m.allItems
 	} else {
-		m.mode = frequencyOrder
+		m.view = frequency
 		m.allVisibleItems = m.groupedItems
 	}
 
@@ -64,7 +70,7 @@ func (m *listModel) update() {
 
 func (m *listModel) sort() {
 	var sortFunc func(i, j int) bool
-	if m.mode == frequencyOrder {
+	if m.view == frequency {
 		sortFunc = m.sortGrouped()
 	} else {
 		sortFunc = m.sortInDateOrder()
@@ -165,12 +171,12 @@ func (m *listModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {
 		m.selectedItem = m.allVisibleItems[y]
 	}
 
-	selectedMode := m.mode
+	selectedMode := m.view
 	leftMargin := 29
 
 	// Get hold of the visible text in the item
 	text := m.allVisibleItems[y].formatted
-	if selectedMode == frequencyOrder {
+	if selectedMode == frequency {
 		text = m.allVisibleItems[y].grouped
 	}
 
@@ -221,8 +227,8 @@ func (l *list) collect() {
 	}
 }
 
-func (l *list) mode() mode {
-	return l.model.mode
+func (l *list) view() view {
+	return l.model.view
 }
 
 // Item is an entry in a shell history. It contains the timestamp, command expression, search terms and highlighted terms
